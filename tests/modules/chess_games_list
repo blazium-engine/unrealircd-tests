@@ -1,0 +1,36 @@
+#!/usr/bin/python3
+"""
+Chess Module - Games list test
+Tests the /GAMES chess command
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+c1a = m.new('c1a')
+c2a = m.new('c2a')
+c3a = m.new('c3a')
+m.connect()
+
+# Test: Games listing
+print("[TEST] Games list command")
+
+# Start a game
+m.send(c1a, "CHESS request $c2a 300")
+m.clearlog()
+m.send(c2a, "CHESS accept $c1a")
+m.expect_all("Game starts", ":.*901.*")
+m.clearlog()
+
+# c3a requests games list
+m.send(c3a, "GAMES chess")
+m.expect(c3a, "Games list start", ":.*903.*")
+m.expect(c3a, "Games list end", ":.*904.*")
+m.clearlog()
+
+# Cleanup
+m.send(c1a, "CHESS resign")
+m.clearlog()
+
+print("Chess games list test passed!")
+
