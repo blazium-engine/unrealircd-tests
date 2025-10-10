@@ -20,7 +20,8 @@ print("[TEST] Games list command")
 m.send(c1a, "CHESS request $c1b 300")
 m.clearlog()
 m.send(c1b, "CHESS accept $c1a")
-m.expect_all("Game starts", ":.*901.*")
+m.expect(c1a, "c1a game starts", ":.*901.*")
+m.expect(c1b, "c1b game starts", ":.*901.*")
 m.clearlog()
 
 # c1c requests games list
@@ -34,4 +35,3 @@ m.send(c1a, "CHESS resign")
 m.clearlog()
 
 print("Chess games list test passed!")
-
