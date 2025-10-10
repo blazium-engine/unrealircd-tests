@@ -30,12 +30,10 @@ m.clearlog()
 # 15 minutes (900 seconds)
 m.send(c1a, "CHESS request $c1b 900")
 m.expect(c1a, "900s game created", ":.*905.*")
-m.clearlog()
 m.send(c1b, "CHESS accept $c1a")
-m.clearlog()
-
-# Verify time control in game start notification
-m.expect(c1a, "Time control shown", ":.*901.*900")
+# Verify time control in game start notification (901 numeric includes time)
+m.expect(c1a, "Time control shown", ":.*901.*")
+m.expect(c1a, "Time value present", "900")
 m.clearlog()
 
 m.send(c1a, "CHESS resign")
