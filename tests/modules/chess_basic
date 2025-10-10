@@ -123,7 +123,7 @@ m.clearlog()
 
 # Enable observer chat
 m.send(c1c, "CHESSOBSERVER")
-m.expect(c1c, "Observer mode enabled", "NOTICE.*observer")
+m.expect(c1c, "Observer mode enabled", "NOTICE.*[Oo]bserver")
 m.clearlog()
 
 # Cleanup - resign the game
