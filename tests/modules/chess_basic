@@ -7,9 +7,10 @@ Tests chess game request, accept, and basic moves
 import irctestframework.irctest
 
 m = irctestframework.irctest.IrcTest()
-c1a = m.new('c1a')
-c2a = m.new('c2a')
-c3a = m.new('c3a')
+# All clients must be on the same server for chess to work
+c1a = m.new('c1a', '1')
+c2a = m.new('c2a', '1')
+c3a = m.new('c3a', '1')
 m.connect()
 
 # Test 1: Chess game request

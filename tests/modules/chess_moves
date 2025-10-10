@@ -7,8 +7,9 @@ Tests all piece movements and special moves
 import irctestframework.irctest
 
 m = irctestframework.irctest.IrcTest()
-c1a = m.new('c1a')
-c2a = m.new('c2a')
+# All clients must be on the same server for chess to work
+c1a = m.new('c1a', '1')
+c2a = m.new('c2a', '1')
 m.connect()
 
 # Helper function to start a game
@@ -143,8 +144,9 @@ print()
 
 # Test 10: Multiple games don't interfere
 print("[TEST] Multiple games isolation")
-c3a = m.new('c3a')
-c4a = m.new('c4a')
+# All clients must be on the same server for chess to work
+c3a = m.new('c3a', '1')
+c4a = m.new('c4a', '1')
 # Need to manually connect the new clients
 m.send_raw(c3a, "NICK $c3a")
 m.send_raw(c3a, "USER c3a 0 0 :Test User")
