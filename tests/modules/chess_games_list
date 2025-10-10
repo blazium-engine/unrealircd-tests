@@ -8,25 +8,25 @@ import irctestframework.irctest
 
 m = irctestframework.irctest.IrcTest()
 # All clients must be on the same server for chess to work
-c1a = m.new('c1a', '1')
-c2a = m.new('c2a', '1')
-c3a = m.new('c3a', '1')
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
 m.connect()
 
 # Test: Games listing
 print("[TEST] Games list command")
 
 # Start a game
-m.send(c1a, "CHESS request $c2a 300")
+m.send(c1a, "CHESS request $c1b 300")
 m.clearlog()
-m.send(c2a, "CHESS accept $c1a")
+m.send(c1b, "CHESS accept $c1a")
 m.expect_all("Game starts", ":.*901.*")
 m.clearlog()
 
-# c3a requests games list
-m.send(c3a, "GAMES chess")
-m.expect(c3a, "Games list start", ":.*903.*")
-m.expect(c3a, "Games list end", ":.*904.*")
+# c1c requests games list
+m.send(c1c, "GAMES chess")
+m.expect(c1c, "Games list start", ":.*903.*")
+m.expect(c1c, "Games list end", ":.*904.*")
 m.clearlog()
 
 # Cleanup
