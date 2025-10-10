@@ -28,10 +28,8 @@ m.expect(c1a, "c1a joins game channel", "JOIN :#chess-")
 m.expect(c1b, "c1b joins game channel", "JOIN :#chess-")
 m.expect(c1a, "c1a gets game start notification", ":.*901.*")
 m.expect(c1b, "c1b gets game start notification", ":.*901.*")
-m.expect(c1a, "c1a gets chess player mode +c", "MODE.*\\+c")
-m.expect(c1b, "c1b gets chess player mode +c", "MODE.*\\+c")
-# v2: Check for game ID in 901 numeric
-m.expect(c1a, "Game ID provided", ":.*901.*#chess-")
+m.expect(c1a, "c1a gets chess player mode", "MODE.*\\+c")
+m.expect(c1b, "c1b gets chess player mode", "MODE.*\\+c")
 m.clearlog()
 print()
 

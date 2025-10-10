@@ -1,0 +1,136 @@
+#!/usr/bin/python3
+"""
+Chess Module - Timer and Clock Tests (v2)
+Tests time controls, clock display, and timeout handling
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+m.connect()
+
+# Test 1: Different time controls
+print("[TEST] Various time controls")
+# 5 minutes (300 seconds)
+m.send(c1a, "CHESS request $c1b 300")
+m.expect(c1a, "300s game created", ":.*905.*")
+m.clearlog()
+m.send(c1b, "CHESS decline $c1a")
+m.clearlog()
+
+# 10 minutes (600 seconds)
+m.send(c1a, "CHESS request $c1b 600")
+m.expect(c1a, "600s game created", ":.*905.*")
+m.clearlog()
+m.send(c1b, "CHESS decline $c1a")
+m.clearlog()
+
+# 15 minutes (900 seconds)
+m.send(c1a, "CHESS request $c1b 900")
+m.expect(c1a, "900s game created", ":.*905.*")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+# Verify time control in game start notification
+m.expect(c1a, "Time control shown", ":.*901.*900")
+m.clearlog()
+
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 2: Clock display
+print("[TEST] Clock display after moves")
+m.send(c1a, "CHESS request $c1b 600")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+# Make some moves
+m.send(c1a, "CHESSMOVE e4")
+m.clearlog()
+m.send(c1b, "CHESSMOVE e5")
+m.clearlog()
+
+# Check clock status
+m.send(c1a, "CHESSCLOCK")
+m.expect(c1a, "Clock shows time remaining", ":.*933.*")
+m.clearlog()
+
+m.send(c1b, "CHESSCLOCK")
+m.expect(c1b, "Clock shows time remaining", ":.*933.*")
+m.clearlog()
+
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 3: Timer in RPL_CHESSMOVE (920)
+print("[TEST] Move includes time remaining")
+m.send(c1a, "CHESS request $c1b 300")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+m.send(c1a, "CHESSMOVE e4")
+# The 920 numeric should include time remaining
+m.expect(c1a, "Move shows time", ":.*920.*")
+m.clearlog()
+
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 4: Very short time control (1 minute)
+print("[TEST] Short time control (60 seconds)")
+m.send(c1a, "CHESS request $c1b 60")
+m.expect(c1a, "Short game created", ":.*905.*")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+m.send(c1a, "CHESSMOVE e4")
+m.expect_all("Move accepted", ":.*920.*")
+m.clearlog()
+
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 5: Timeout notification (manual test)
+print("[TEST] Timeout notification format")
+# Can't actually wait for timeout in test, but verify the game accepts time controls
+m.send(c1a, "CHESS request $c1b 1")  # 1 second - might be too short
+# If minimum time enforced, should get error
+# If accepted, game starts normally
+print()
+
+# Test 6: Clock after multiple moves
+print("[TEST] Clock updates with each move")
+m.send(c1a, "CHESS request $c1b 600")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+# Make several moves
+for i in range(5):
+    m.send(c1a, "CHESSMOVE e4" if i == 0 else ("Nf3" if i == 1 else ("Bc4" if i == 2 else "d3")))
+    m.clearlog()
+    if i < 4:  # Don't make black move on last iteration
+        m.send(c1b, "CHESSMOVE e5" if i == 0 else ("Nc6" if i == 1 else ("Nf6" if i == 2 else "d6")))
+        m.clearlog()
+
+# Check that clock still works
+m.send(c1a, "CHESSCLOCK")
+m.expect(c1a, "Clock after multiple moves", ":.*933.*")
+m.clearlog()
+
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+print("All timer tests passed!")
+

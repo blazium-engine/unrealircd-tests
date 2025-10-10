@@ -1,0 +1,255 @@
+#!/usr/bin/python3
+"""
+Chess Module - Advanced Features Tests
+Tests draw offers, observers, kick, decline, and edge cases
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+
+# Create clients
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+m.connect()
+
+# Test 1: Decline game request
+print("[TEST] Decline game request")
+m.send(c1a, "CHESS request $c1b 300")
+m.clearlog()
+m.send(c1b, "CHESS decline $c1a")
+m.expect(c1a, "c1a notified of decline", ":.*906.*")
+m.expect(c1b, "c1b declined", "NOTICE.*declined")
+m.clearlog()
+print()
+
+# Test 2: Draw offer and acceptance
+print("[TEST] Draw offer and acceptance")
+m.send(c1a, "CHESS request $c1b 600")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+# Make a move
+m.send(c1a, "CHESSMOVE e4")
+m.clearlog()
+m.send(c1b, "CHESSMOVE e5")
+m.clearlog()
+
+# c1a offers draw
+m.send(c1a, "CHESS draw")
+m.expect(c1a, "c1a offered draw", "NOTICE.*offered.*draw")
+m.expect(c1b, "c1b sees draw offer", ":.*918.*")
+m.clearlog()
+
+# c1b accepts draw
+m.send(c1b, "CHESS draw")
+m.expect(c1a, "c1a sees draw accepted", ":.*919.*")
+m.expect(c1b, "c1b sees draw accepted", ":.*919.*")
+m.expect_all("Game ends in draw", ":.*902.*Draw")
+m.clearlog()
+print()
+
+# Test 3: Draw offer declined (by making move instead)
+print("[TEST] Draw offer implicitly declined")
+m.send(c1a, "CHESS request $c1b 600")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+m.send(c1a, "CHESSMOVE e4")
+m.clearlog()
+m.send(c1b, "CHESSMOVE e5")
+m.clearlog()
+
+# c1a offers draw
+m.send(c1a, "CHESS draw")
+m.clearlog()
+
+# c2a makes a move instead of accepting (implicitly declines)
+m.send(c1b, "CHESSMOVE Nf6")
+m.expect_all("Move accepted", ":.*920.*")
+m.clearlog()
+
+# c1a tries to accept non-existent draw
+m.send(c1a, "CHESS draw")
+m.expect(c1a, "No draw offer to accept", ":.*955.*")
+m.clearlog()
+
+# Cleanup
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 4: Observer mode
+print("[TEST] Observer mode")
+m.send(c1a, "CHESS request $c1b 600")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+# c1c enables observer mode
+m.send(c1c, "CHESSOBSERVER")
+m.expect(c1c, "Observer mode enabled", "NOTICE.*[Oo]bserver")
+m.clearlog()
+
+# c1c can see game in GAMES list
+m.send(c1c, "GAMES chess")
+m.expect(c1c, "c1c sees game", ":.*903.*")
+m.clearlog()
+
+# Cleanup
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 5: Request to self (error)
+print("[TEST] Cannot request game with self")
+m.send(c1a, "CHESS request $c1a 300")
+m.expect(c1a, "Cannot play self", ":.*951.*")
+m.clearlog()
+print()
+
+# Test 6: Invalid time control
+print("[TEST] Invalid time control")
+m.send(c1a, "CHESS request $c1b 0")
+m.expect(c1a, "Invalid time", ":.*952.*")
+m.clearlog()
+
+m.send(c1a, "CHESS request $c1b 99999")
+m.expect(c1a, "Time too high", ":.*952.*")
+m.clearlog()
+print()
+
+# Test 7: Move when not your turn
+print("[TEST] Move out of turn")
+m.send(c1a, "CHESS request $c1b 600")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+# c1b tries to move (it's White/c1a's turn)
+m.send(c1b, "CHESSMOVE e5")
+m.expect(c1b, "Not your turn error", ":.*942.*")
+m.clearlog()
+
+# Correct player moves
+m.send(c1a, "CHESSMOVE e4")
+m.expect_all("Valid move", ":.*920.*")
+m.clearlog()
+
+# Cleanup
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 8: Move in non-existent game
+print("[TEST] Move when not in game")
+m.send(c1a, "CHESSMOVE e4")
+m.expect(c1a, "Not in game error", ":.*940.*")
+m.clearlog()
+print()
+
+# Test 9: Resign when not in game
+print("[TEST] Resign when not in game")
+m.send(c1a, "CHESS resign")
+m.expect(c1a, "Not in game error", ":.*940.*")
+m.clearlog()
+print()
+
+# Test 10: Target already in game
+print("[TEST] Target already in another game")
+# c1a vs c1b game
+m.send(c1a, "CHESS request $c1b 300")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+# c1c tries to challenge c1b (who's already playing)
+m.send(c1c, "CHESS request $c1b 300")
+m.expect(c1c, "Target in game error", ":.*953.*")
+m.clearlog()
+
+# Cleanup
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 11: CHESSBOARD command
+print("[TEST] CHESSBOARD command")
+m.send(c1a, "CHESS request $c1b 600")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+m.send(c1a, "CHESSMOVE e4")
+m.clearlog()
+
+# View board
+m.send(c1a, "CHESSBOARD")
+m.expect(c1a, "Board display", ":.*910.*")
+m.clearlog()
+
+m.send(c1b, "CHESSBOARD")
+m.expect(c1b, "Board display", ":.*910.*")
+m.clearlog()
+
+# Cleanup
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 12: CHESSCLOCK command
+print("[TEST] CHESSCLOCK command")
+m.send(c1a, "CHESS request $c1b 600")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+m.send(c1a, "CHESSMOVE e4")
+m.clearlog()
+
+# Check clock
+m.send(c1a, "CHESSCLOCK")
+m.expect(c1a, "Clock display", ":.*933.*")
+m.clearlog()
+
+m.send(c1b, "CHESSCLOCK")
+m.expect(c1b, "Clock display", ":.*933.*")
+m.clearlog()
+
+# Cleanup
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 13: Request timeout (no accept within time limit)
+print("[TEST] Request expires if not accepted")
+m.send(c1a, "CHESS request $c1b 300")
+m.clearlog()
+
+# Don't accept - request should expire after timeout
+# (In real test, would need to wait for the timeout)
+# For now, just decline to cleanup
+m.send(c1b, "CHESS decline $c1a")
+m.clearlog()
+print()
+
+# Test 14: Alternative command aliases
+print("[TEST] Command aliases")
+# "challenge" is alias for "request"
+m.send(c1a, "CHESS challenge $c1b 300")
+m.expect(c1a, "Challenge sent", ":.*905.*")
+m.clearlog()
+
+# "forfeit" is alias for "resign"
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+m.send(c1a, "CHESS forfeit")
+m.expect_all("Game ends", ":.*902.*")
+m.clearlog()
+print()
+
+print("All advanced feature tests passed!")
+

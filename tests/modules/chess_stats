@@ -1,0 +1,92 @@
+#!/usr/bin/python3
+"""
+Chess Module - Statistics Tests
+Tests the CHESSSTATS command and game statistics (v2 feature)
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+
+# Create clients
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+m.connect()
+
+# Test 1: Global statistics (no active games)
+print("[TEST] Global statistics - no games")
+m.send(c1a, "CHESSSTATS")
+m.expect(c1a, "Stats header", ":.*935.*")
+m.expect(c1a, "Stats content", ":.*934.*")
+m.expect(c1a, "Stats end", ":.*936.*")
+m.clearlog()
+print()
+
+# Test 2: Statistics with active game
+print("[TEST] Statistics with active game")
+m.send(c1a, "CHESS request $c1b 600")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+
+# Make a few moves
+m.send(c1a, "CHESSMOVE e4")
+m.clearlog()
+m.send(c1b, "CHESSMOVE e5")
+m.clearlog()
+
+# Check stats
+m.send(c1c, "CHESSSTATS")
+m.expect(c1c, "Stats show active game", ":.*934.*")
+m.clearlog()
+
+# End game
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 3: Player-specific statistics
+print("[TEST] Player statistics")
+# Start and finish a game to build stats
+m.send(c1a, "CHESS request $c1b 300")
+m.clearlog()
+m.send(c1b, "CHESS accept $c1a")
+m.clearlog()
+m.send(c1a, "CHESSMOVE e4")
+m.clearlog()
+m.send(c1b, "CHESS resign")
+m.clearlog()
+
+# Check c1a's stats (should show win)
+m.send(c1a, "CHESSSTATS $c1a")
+m.expect(c1a, "Player stats", ":.*934.*")
+m.clearlog()
+print()
+
+# Test 4: Statistics after multiple games
+print("[TEST] Statistics tracking multiple games")
+# Play a quick game
+m.send(c1a, "CHESS request $c1c 300")
+m.clearlog()
+m.send(c1c, "CHESS accept $c1a")
+m.clearlog()
+m.send(c1a, "CHESSMOVE e4")
+m.clearlog()
+m.send(c1c, "CHESSMOVE e5")
+m.clearlog()
+
+# Draw
+m.send(c1a, "CHESS draw")
+m.clearlog()
+m.send(c1c, "CHESS draw")
+m.clearlog()
+
+# Check global stats again
+m.send(c1a, "CHESSSTATS")
+m.expect(c1a, "Stats updated", ":.*934.*")
+m.clearlog()
+print()
+
+print("All statistics tests passed!")
+

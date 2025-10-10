@@ -1,95 +1,240 @@
-# Module Tests
+# UnrealIRCd Module Tests
 
 This directory contains tests for third-party UnrealIRCd modules.
 
-## Chess Module Tests
+## Chess Module Tests (v2)
 
-Tests for the chess module (third/chess):
+Comprehensive test suite for the chess module (`third/chess`).
 
-- **chess_basic** - Basic functionality (request, accept, moves, resign, observer mode)
-- **chess_moves** - Move validation (all piece types, castling, captures)
-- **chess_games_list** - Games listing command
+### Test Files (9 test suites, 72+ tests)
 
-### Running Chess Tests
+#### Core Functionality
+- **chess_basic** (12 tests) - Game request, accept, decline, moves, resignation, observer mode
+- **chess_moves** (11 tests) - Move validation for all piece types, castling, check, checkmate
+- **chess_games_list** (4 tests) - GAMES command and active game listing
+
+#### Advanced Features (v2)
+- **chess_cross_server** (8 tests) - Multi-server games with network-wide synchronization
+- **chess_reconnect** (5 tests) - Disconnect/rejoin handling with grace period and keys
+- **chess_stats** (4 tests) - CHESSSTATS command, global and player statistics
+- **chess_advanced** (14 tests) - Draw offers, observers, command aliases, error handling
+- **chess_special_moves** (8 tests) - En passant, promotion, castling restrictions
+- **chess_timer** (6 tests) - Time controls, clock display, timer updates
+
+### Running Tests
 
 Run all chess tests:
 ```bash
 ./run -services none -boot tests/modules/chess_*
 ```
 
-Run specific test:
+Run specific test suite:
 ```bash
 ./run -services none -boot tests/modules/chess_basic
+./run -services none -boot tests/modules/chess_cross_server
 ```
 
-### Prerequisites
-
-1. UnrealIRCd must be compiled with chess module:
-   ```bash
-   cd ~/unrealircd/src/modules/third/chess
-   make clean
-   cd ~/unrealircd
-   make install
-   ```
-
-2. Chess module must be loaded in unrealircd.conf:
-   ```
-   loadmodule "third/chess";
-   ```
-
-### Test Coverage
-
-- ✅ Game request and acceptance
-- ✅ Game decline
-- ✅ Move validation (valid/invalid)
-- ✅ Turn enforcement
-- ✅ Piece movements (pawn, knight, bishop, etc.)
-- ✅ Special moves (castling, captures)
-- ✅ Check notification
-- ✅ Board display
-- ✅ Chess clock
-- ✅ Game resignation
-- ✅ Observer mode
-- ✅ Games listing
-- ✅ Multiple simultaneous games
-
-### Expected Behavior
-
-**Game Request:**
-- Numeric 900 sent to target player
-- Confirmation notice to requester
-
-**Game Accept:**
-- Both players join auto-created channel (#chess-player1-player2)
-- Numeric 901 (game start) sent
-- User mode +c set on both players
-- Channel mode +C set on game channel
-
-**Moves:**
-- Numeric 920 (move notification) on valid move
-- Numeric 941 (invalid move) on invalid move
-- Numeric 942 (not your turn) when wrong player tries to move
-- Numeric 913 (check) when king is in check
-
-**Game End:**
-- Numeric 902 (game end) sent
-- User mode +c removed from both players
-- Game logged to PGN file
-
-### Debugging Failed Tests
-
-Check server logs:
-```bash
-tail -f ~/unrealircd/logs/ircd.log
-```
-
-Check chess game logs:
-```bash
-ls -l ~/unrealircd/chess-logs/
-```
-
-Run test with verbose output:
+Run with debugging:
 ```bash
 ./run -services none -boot -debug tests/modules/chess_basic
 ```
 
+### Prerequisites
+
+1. **Compile chess module:**
+   ```bash
+   cd src/modules/third/chess
+   make clean && make all
+   cd ../../..
+   make install
+   ```
+
+2. **Load module in config:**
+   ```conf
+   loadmodule "third/chess";
+   ```
+
+3. **Optional configuration** (`conf/chess.conf`):
+   ```conf
+   chess {
+       max-games-per-server 10;
+       auto-destroy-channel-delay 10;
+       game-request-timeout 60;
+   };
+   ```
+
+### Chess Commands Reference
+
+#### Game Management
+| Command | Description | Example |
+|---------|-------------|---------|
+| `CHESS request <nick> <time>` | Challenge player | `CHESS request Bob 300` |
+| `CHESS accept <nick>` | Accept challenge | `CHESS accept Alice` |
+| `CHESS decline <nick>` | Decline challenge | `CHESS decline Alice` |
+| `CHESS resign` | Resign current game | `CHESS resign` |
+| `CHESS forfeit` | Alias for resign | `CHESS forfeit` |
+| `CHESS draw` | Offer or accept draw | `CHESS draw` |
+| `CHESS rejoin <key>` | Rejoin after disconnect | `CHESS rejoin abc123def456` |
+
+#### Gameplay
+| Command | Description | Example |
+|---------|-------------|---------|
+| `CHESSMOVE <move>` | Make a move | `CHESSMOVE e4` |
+| `CHESSBOARD` | Display board | `CHESSBOARD` |
+| `CHESSCLOCK` | Show time remaining | `CHESSCLOCK` |
+
+#### Information
+| Command | Description | Example |
+|---------|-------------|---------|
+| `GAMES chess` | List active games | `GAMES chess` |
+| `CHESSSTATS` | Global statistics | `CHESSSTATS` |
+| `CHESSSTATS <nick>` | Player statistics | `CHESSSTATS Alice` |
+| `CHESSOBSERVER` | Enable observer chat | `CHESSOBSERVER` |
+
+### Protocol Numerics
+
+#### Success Responses (900-939)
+- **900** - Game request received
+- **901** - Game started (includes game ID, channel, time control)
+- **902** - Game ended (includes winner, reason)
+- **903** - Game in list
+- **905** - Request sent confirmation
+- **906** - Request declined
+- **910** - Board display line
+- **913** - Check notification
+- **915** - Rejoin key provided
+- **918** - Draw offer received
+- **919** - Draw accepted
+- **920** - Move notification (includes SAN, long notation, move number, time)
+- **921** - Piece captured (includes piece type, square)
+- **922** - Castling (includes kingside/queenside)
+- **924** - En passant capture
+- **933** - Clock status (both players' time)
+- **935** - Statistics header
+- **936** - Statistics footer
+
+#### Error Responses (940-959)
+- **940** - Not in a game
+- **941** - Invalid move
+- **942** - Not your turn
+- **944** - Already in a game
+- **951** - Cannot play against self
+- **952** - Invalid time control
+- **953** - Target already in a game
+- **955** - No draw offer to accept
+
+### User Modes
+- **+c** - Chess player mode (auto-set during game, auto-removed after)
+
+### Channel Modes
+- **+g** - Chess game channel mode (set on auto-created game channels)
+
+### Test Coverage Summary
+
+#### Basic Functionality ✓
+- [x] Request game with various time controls
+- [x] Accept game request
+- [x] Decline game request
+- [x] Move validation (all piece types)
+- [x] Turn enforcement
+- [x] Invalid move rejection
+- [x] Resignation
+- [x] Board display
+- [x] Clock display
+- [x] Observer mode
+
+#### Advanced Features ✓
+- [x] Draw offers and acceptance
+- [x] Draw offer expiration (on next move)
+- [x] Command aliases (challenge, forfeit)
+- [x] Self-challenge prevention
+- [x] Invalid time control rejection
+- [x] Target in game prevention
+- [x] Multiple concurrent games (isolation)
+
+#### Special Moves ✓
+- [x] Kingside castling (O-O)
+- [x] Queenside castling (O-O-O)
+- [x] Castling after king moved (invalid)
+- [x] Castling through check (invalid)
+- [x] En passant capture
+- [x] Pawn promotion
+- [x] Capture notation (exd5, Qxf7+)
+- [x] Check notification (+)
+- [x] Checkmate notification (#)
+
+#### Cross-Server ✓
+- [x] Request across servers
+- [x] Accept across servers
+- [x] Move synchronization
+- [x] Check/checkmate sync
+- [x] Game end sync
+- [x] Draw offers cross-server
+- [x] Observer on third server
+
+#### Reconnection ✓
+- [x] Disconnect during game
+- [x] Grace period notification
+- [x] Rejoin with key
+- [x] Invalid rejoin key
+- [x] Both players disconnect
+
+#### Statistics & Timers ✓
+- [x] Global statistics display
+- [x] Player-specific statistics
+- [x] Statistics update after games
+- [x] Various time controls (60s, 300s, 600s, 900s)
+- [x] Clock display after moves
+- [x] Time remaining in move notification
+
+### Debugging Failed Tests
+
+**Check server logs:**
+```bash
+tail -f ~/unrealircd/logs/ircd.log
+```
+
+**Check chess-specific logs:**
+```bash
+ls -la ~/unrealircd/logs/chess/
+tail -f ~/unrealircd/logs/chess/*.log
+```
+
+**Verify module is loaded:**
+```bash
+./unrealircd module list | grep chess
+```
+
+**Test manually with IRC client:**
+```
+/LOAD -m third/chess
+/CHESS request <nick> 300
+```
+
+### Common Issues
+
+**Module not loaded:**
+- Check that `loadmodule "third/chess";` is in config
+- Verify `chess.so` exists in `modules/third/`
+- Check for module load errors in ircd.log
+
+**Tests fail with "Not in game" errors:**
+- Ensure clients are connecting properly
+- Check that game request is being sent
+- Verify accept is being processed
+
+**Cross-server tests fail:**
+- Ensure servers are linked in test config
+- Check server-to-server protocol messages
+- Verify CHESSGAME server command is registered
+
+### Documentation
+
+- **Protocol Specification:** `src/modules/third/chess/docs/CHESS_PROTOCOL_RFC.md`
+- **Client Implementation:** `src/modules/third/chess/docs/CLIENT_IMPLEMENTATION_GUIDE.md`
+- **Module Architecture:** `src/modules/third/chess/docs/INDEX.md`
+- **Configuration:** `doc/conf/chess.conf.example`
+
+---
+
+*Last updated: 2025-10-10 - Chess Module v2 Test Suite*

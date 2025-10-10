@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """
-Chess Module - Move validation tests (v2)
-Tests all piece movements, castling, captures, check, and checkmate
+Chess Module - Move validation tests
+Tests all piece movements and special moves
 """
 
 import irctestframework.irctest

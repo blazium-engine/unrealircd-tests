@@ -1,0 +1,144 @@
+#!/usr/bin/python3
+"""
+Chess Module - Cross-Server Game Tests
+Tests chess games between players on different servers (v2 feature)
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+
+# Create clients - framework assigns to different servers automatically
+c1a = m.new('c1a')
+c2a = m.new('c2a')
+c3a = m.new('c3a')
+m.connect()
+
+# Test 1: Cross-server game request (server 1 → server 2)
+print("[TEST] Cross-server game request")
+m.send(c1a, "CHESS request $c2a 300")
+m.expect(c1a, "c1a request sent", ":.*905.*")
+m.expect(c2a, "c2a receives request", ":.*900.*challenges you to a chess game")
+m.clearlog()
+print()
+
+# Test 2: Cross-server game start
+print("[TEST] Cross-server game accept")
+m.send(c2a, "CHESS accept $c1a")
+m.expect_all("Game starts", ":.*901.*")
+m.expect(c1a, "c1a gets player mode", "MODE.*\\+c")
+m.expect(c2a, "c2a gets player mode", "MODE.*\\+c")
+m.clearlog()
+print()
+
+# Test 3: Cross-server move (server 1 → server 2)
+print("[TEST] Cross-server move synchronization")
+m.send(c1a, "CHESSMOVE e4")
+m.expect(c1a, "c1a sees move", ":.*920.*")
+m.expect(c2a, "c2a sees move across servers", ":.*920.*e4")
+m.clearlog()
+
+m.send(c2a, "CHESSMOVE e5")
+m.expect(c1a, "c1a sees opponent move", ":.*920.*e5")
+m.expect(c2a, "c2a sees own move", ":.*920.*e5")
+m.clearlog()
+print()
+
+# Test 4: Third server observer
+print("[TEST] Observer on third server")
+# c3a can observe the game between c1a and c2a
+m.send(c3a, "GAMES chess")
+m.expect(c3a, "c3a sees game list", ":.*903.*")
+m.clearlog()
+print()
+
+# Test 5: Cross-server game end
+print("[TEST] Cross-server game resignation")
+m.send(c1a, "CHESS resign")
+m.expect(c1a, "c1a sees game end", ":.*902.*")
+m.expect(c2a, "c2a sees game end across servers", ":.*902.*")
+m.expect(c1a, "c1a loses player mode", "MODE.*-c")
+m.expect(c2a, "c2a loses player mode", "MODE.*-c")
+m.clearlog()
+print()
+
+# Test 6: Multiple concurrent cross-server games
+print("[TEST] Multiple concurrent cross-server games")
+# Game 1: c1a vs c2a
+m.send(c1a, "CHESS request $c2a 600")
+m.clearlog()
+m.send(c2a, "CHESS accept $c1a")
+m.clearlog()
+
+# Game 2: c1a vs c3a (server 1 vs server 3)
+# Note: c1a cannot play in two games simultaneously - should get error
+m.send(c1a, "CHESS request $c3a 600")
+m.expect(c1a, "c1a already in game", ":.*944.*")
+m.clearlog()
+
+# End game 1
+m.send(c1a, "CHESS resign")
+m.clearlog()
+
+# Now c1a can start new game
+m.send(c1a, "CHESS request $c3a 600")
+m.expect(c1a, "c1a request sent", ":.*905.*")
+m.expect(c3a, "c3a receives request", ":.*900.*")
+m.clearlog()
+
+m.send(c3a, "CHESS accept $c1a")
+m.expect_all("Cross-server game starts", ":.*901.*")
+m.clearlog()
+
+# Cleanup
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
+# Test 7: Cross-server draw offers
+print("[TEST] Cross-server draw offer")
+m.send(c1a, "CHESS request $c2a 300")
+m.clearlog()
+m.send(c2a, "CHESS accept $c1a")
+m.clearlog()
+
+# c1a offers draw
+m.send(c1a, "CHESS draw")
+m.expect(c1a, "c1a offered draw", "NOTICE.*draw")
+m.expect(c2a, "c2a sees draw offer across servers", ":.*918.*")
+m.clearlog()
+
+# c2a accepts draw
+m.send(c2a, "CHESS draw")
+m.expect_all("Draw accepted", ":.*902.*Draw")
+m.clearlog()
+print()
+
+# Test 8: Cross-server checkmate
+print("[TEST] Cross-server checkmate (Scholar's Mate)")
+m.send(c1a, "CHESS request $c2a 600")
+m.clearlog()
+m.send(c2a, "CHESS accept $c1a")
+m.clearlog()
+
+# Scholar's Mate sequence
+m.send(c1a, "CHESSMOVE e4")
+m.clearlog()
+m.send(c2a, "CHESSMOVE e5")
+m.clearlog()
+m.send(c1a, "CHESSMOVE Qh5")
+m.clearlog()
+m.send(c2a, "CHESSMOVE Nc6")
+m.clearlog()
+m.send(c1a, "CHESSMOVE Bc4")
+m.clearlog()
+m.send(c2a, "CHESSMOVE Nf6")
+m.clearlog()
+m.send(c1a, "CHESSMOVE Qxf7")
+m.expect(c1a, "c1a sees checkmate", ":.*902.*Checkmate")
+m.expect(c2a, "c2a sees checkmate across servers", ":.*902.*Checkmate")
+m.clearlog()
+print()
+
+print("All cross-server chess tests passed!")
+
