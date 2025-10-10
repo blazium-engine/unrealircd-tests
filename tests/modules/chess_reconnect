@@ -24,8 +24,12 @@ m.clearlog()
 m.send(c1a, "CHESSMOVE e4")
 m.clearlog()
 
-# c1b disconnects
-m.send(c1b, "QUIT :Connection lost")
+# c1b disconnects - note: client will close after QUIT
+# We need to check c1a's notification before trying to sync
+c1b.send_raw("QUIT :Connection lost")
+# Give server time to process
+import time
+time.sleep(0.5)
 m.expect(c1a, "c1a notified of disconnect", "NOTICE.*disconnected")
 m.clearlog()
 print()
