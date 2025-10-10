@@ -1,0 +1,20 @@
+#!/usr/bin/python3
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+c1a = m.new('c1a')
+c2a = m.new('c2a')
+c3a = m.new('c3a')
+m.connect()
+
+chan = m.randchan()
+m.join_all(chan, creator = c2a)
+m.expect(c1a, "users in channel", "JOIN")
+print
+
+# Need to disable the auto-syncer here due to the nick change
+m.sync = 0
+m.send(c3a, "NICK nickcmdtest")
+m.expect_all("All users should see the NICK event", ":c3a.*NICK :nickcmdtest", timeout = 10)
+m.not_expect(c3a, "No 447 error numeric on /NICK", " 447.*not change nickname")
+print

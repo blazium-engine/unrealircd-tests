@@ -1,0 +1,32 @@
+#!/usr/bin/python3
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+c1a = m.new('c1a')
+c2a = m.new('c2a')
+c3a = m.new('c3a')
+m.connect()
+
+chan = m.randchan()
+m.join_all(chan)
+m.expect(c1a, "users in channel", "JOIN")
+print
+
+m.send(c1a, "CAP REQ away-notify")
+m.send(c3a, "AWAY :I am away")
+m.expect(c1a, "away-notify should show user going AWAY", ":c3a.* AWAY :I am away")
+m.not_expect(c2a, "without away-notify it should not show user going AWAY", ":c3a.* AWAY :I am away")
+m.clearlog()
+print
+
+m.send(c3a, "AWAY :I am still away")
+m.expect(c1a, "away-notify should show user going AWAY", ":c3a.* AWAY :I am still away")
+m.not_expect(c2a, "without away-notify it should not show user going AWAY", ":c3a.* AWAY :I am still away")
+m.clearlog()
+print
+
+m.send(c3a, "AWAY")
+m.expect(c1a, "away-notify should show user coming back from AWAY", ":c3a.* AWAY$")
+m.not_expect(c2a, "without away-notify it should not show user combing back from AWAY", ":c3a.* AWAY$")
+m.clearlog()
+print

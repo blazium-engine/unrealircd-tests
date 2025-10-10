@@ -1,0 +1,244 @@
+#!/bin/bash
+function fail {
+	echo "$1"
+	exit 1
+}
+
+function start_services {
+	echo "Booting services ($SERVICES)..."
+	if [ "$SERVICES" = "atheme" ]; then
+		cp -av serverconfig/atheme/atheme.conf ~/atheme/etc/ || fail "Failed to copy atheme.conf"
+		cp -av serverconfig/atheme/services.db ~/atheme/etc/ || fail "Failed to copy services.db"
+		cd ~/atheme || exit 1
+		bin/atheme-services || fail "atheme failed to start"
+		cd -
+	fi
+	if [ "$SERVICES" = "anope" ]; then
+		cp -av serverconfig/anope/services.conf ~/anope/conf/ || fail "Failed to copy services.conf"
+		cp -av serverconfig/anope/anope.db ~/anope/data/ || fail "Failed to copy anope.db"
+		cd ~/anope || exit 1
+		bin/services || fail "anope failed to start"
+		cd -
+	fi
+	if [ "$SERVICES" = "none" ]; then
+		echo "Skipping services tests (not recommended)"
+	fi
+}
+
+function kill_server {
+	echo -n "Killing any old server instances"
+	PROCS="valgrind|valgrind.bin|memcheck|memcheck-amd64-linux|memcheck-x86-linux|ircd|unrealircd|val|atheme-services|services|anope"
+	KILLTIMEOUT="15"
+	T=0
+	# Ask to shutdown gracefully
+	pkill -15 -U "$UID" "$PROCS" 1>/dev/null 2>&1
+	while [ "$T" -lt "$KILLTIMEOUT" ];
+	do
+		# Killed by now?
+		if ! pgrep -U "$UID" "$PROCS" >/dev/null; then
+			break
+		fi
+		T=$(expr $T + 1)
+		echo -n "."
+		sleep 1
+	done
+	echo
+	pkill -9 -U "$UID" "$PROCS"
+}
+
+if [ "$MAXPARALLEL" = "" ]; then
+	MAXPARALLEL="25"
+fi
+TIMEOUT="160"
+KEEPDBS="0"
+FAST="0"
+INCLUDEFILE=""
+
+export PYTHONPATH="`pwd`:$PYTHONPATH"
+export PYTHONIOENCODING=utf-8
+export TIMEOUT
+export ASAN_OPTIONS=abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1
+
+if [ "$MAKE" = "" ]; then
+	if gmake --version 1>/dev/null 2>&1; then
+		MAKE="gmake"
+	else
+		MAKE="make"
+	fi
+fi
+
+rm -rf logs
+mkdir logs
+mkdir logs/success
+mkdir logs/failure
+
+if [ "$1" != "-services" ]; then
+	echo "ERROR: You need to specify with which services we should test, this needs to be the first parameter passed to ./run:"
+	echo "./run -services [anope|atheme|none] [...other options for us...]"
+	exit 1
+else
+	shift
+	if [ "$1" = "anope" ]; then
+		SERVICES="anope"
+	elif [ "$1" = "atheme" ]; then
+		SERVICES="atheme"
+	elif [ "$1" = "none" ]; then
+		SERVICES="none"
+	else
+		echo "Unrecognized services ($1). Specify one of: anope, atheme, none"
+		exit 1
+	fi
+	shift
+fi
+
+if [ "$1" = "-include" ]; then
+	shift
+	INCLUDEFILE="$1"
+	shift
+fi
+
+if [ "$1" = "-single" ]; then
+	MAXPARALLEL=1
+	shift
+fi
+
+if [ "$1" = "-fast" ]; then
+	FAST=2
+	TIMEOUT=30
+	shift
+fi
+
+if [ "$1" = "-slightlyfast" ]; then
+	FAST=1
+	shift
+fi
+
+if [ "$1" = "-keepdbs" ]; then
+	KEEPDBS=1
+	shift
+fi
+
+if [ "$1" = "-boot" -o "$1" = "" ]; then
+	shift
+
+	# Compile any modules that are needed (fakereputation etc)
+	cp -av serverconfig/unrealircd/modules/*.c ~/unrealircd/source/src/modules/third/ || exit 1
+	cd ~/unrealircd/source || exit 1
+	$MAKE install
+	cd -
+
+	# Boot the ircd
+	kill_server
+	echo "Booting IRC server..."
+	cp -av serverconfig/unrealircd/* ~/unrealircd/conf/ || fail "Failed to copy serverconfig/unrealircd"
+	cd ~/unrealircd/ || exit 1
+	if [ "$KEEPDBS" -eq 0 ]; then
+		mkdir data/old 2>/dev/null
+		mv data/*.db data/old/ 2>/dev/null
+		rm -rf data/history.old 2>/dev/null
+		mv data/history data/history.old 2>/dev/null
+	fi
+	if [ "$INCLUDEFILE" != "" ]; then
+		# Add include to irc1.conf (only)
+		echo 'include "'$INCLUDEFILE'";' >>conf/irc1.conf
+	fi
+	for name in irc2 irc1 irc3
+	do
+		bin/unrealircd -f $name.conf || fail "UnrealIRCd failed to start ($name)"
+		sleep 1
+		kill -1 `cat data/unrealircd.pid`
+	done
+	cd -
+	start_services
+	# Give services a chance to link in
+	sleep 2
+	
+	timeout --kill-after=5 --signal=INT 10 tests/_pre_test || fail "Linking servers failed"
+	echo
+fi
+
+if [ "$1" = "" ]; then
+	# Run (almost) all tests:
+	echo "Running tests in parallel..."
+	if [ "$SERVICES" = "none" ]; then
+		find tests -type f|grep -vF '~'|grep -vF _pre_test|grep -vF services/|grep -vF /db/|grep -vF /serial/|xargs -L1 -P$MAXPARALLEL irctestframework/wrapper
+	else
+		find tests -type f|grep -vF '~'|grep -vF _pre_test|grep -vF /db/|grep -vF /serial/|xargs -L1 -P$MAXPARALLEL irctestframework/wrapper
+	fi
+	wait
+	if [ "$FAST" = 0 ]; then
+		# Now do the tests that can only be run in series...
+		echo "Running remaining tests in series..."
+		find tests/serial/ -type f|grep -vF '~'|grep -v README|xargs -L1 -P1 irctestframework/wrapper
+	elif [ "$FAST" = 1 ]; then
+		# The same, but skip the time_extban_expiry test to save a full minute
+		echo "Running remaining tests in series..."
+		find tests/serial/ -type f|grep -vF '~'|grep -v README|grep -vF time_extban_expiry|xargs -L1 -P1 irctestframework/wrapper
+	fi
+else
+	# Run specific tests:
+	echo "Running specific tests by user request..."
+	for f in $*
+	do
+		# Skip backup files and such (blah~)
+		if (echo "$f"|egrep -q '~$'); then
+			continue
+		fi
+		if [ "$f" = "tests/db/writing/history" -o "$f" = "tests/db/reading/history" ]; then
+			if ! (echo "$INCLUDEFILE"|grep -q 'crypt'); then
+				echo "WARNING: Skipping $f -- not using encryption so can't test this"
+				continue
+			fi
+		fi
+		irctestframework/wrapper $f
+	done
+fi
+
+cd logs/success
+echo
+echo "==================================================================================================="
+echo ">>> SUCCESFUL TESTS"
+for f in *.log
+do
+	name="`echo $f|sed 's/__/\//g'|sed 's/\.log//g'`"
+	if [ "$f" == "*.log" ]; then
+		continue
+	fi
+	echo -e "\u2714 $name"
+done
+cd - 1>/dev/null 2>&1
+echo "==================================================================================================="
+
+failed=0
+cd logs/failure
+for f in *.log
+do
+	name="`echo $f|sed 's/__/\//g'|sed 's/\.log//g'`"
+	if [ "$f" == "*.log" ]; then
+		continue
+	fi
+	echo
+	echo "==================================================================================================="
+	echo ">>> FAILED TEST: $name"
+	cat $f
+	echo "==================================================================================================="
+	echo
+	failed=1
+done
+
+if [ "$failed" = 1 ]; then
+	echo
+	echo "======[ SUMMARY ]======"
+	for f in *.log
+	do
+		name="`echo $f|sed 's/__/\//g'|sed 's/\.log//g'`"
+		if [ "$f" == "*.log" ]; then
+			continue
+		fi
+		echo "TEST FAILED: $name"
+	done
+fi
+
+cd - 1>/dev/null 2>&1
+
+exit $failed

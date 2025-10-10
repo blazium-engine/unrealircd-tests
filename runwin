@@ -1,0 +1,216 @@
+#!/bin/bash
+
+function stopunreal {
+	# Ask gracefully first
+	taskkill -im unrealircd.exe -t
+	taskkill -im timeout.exe -t
+	# Wait
+	sleep 5
+	# Terminate with force
+	taskkill -im unrealircd.exe -f -t
+	taskkill -im timeout.exe -f -t
+	sleep 2
+}
+
+function show_core_files {
+	echo "UnrealIRCd has CRASHED!!"
+	for f in "$UNREALIRCDDIR/"*.core
+	do
+		echo "*** $f ***"
+		cat "$f"
+	done
+}
+
+function fail {
+	echo "FATAL ERROR: $1"
+	sleep 5
+	if ls "$UNREALIRCDDIR/"*mdmp 1>/dev/null 2>&1; then
+		show_core_files
+		CRASHED=1
+	fi
+	echo "Cleaning up..."
+	stopunreal
+	if [ "$CRASHED" = 1 ]; then
+		echo "Tests failed / UnrealIRCd has CRASHED!! See errors above."
+	else
+		if ls "$UNREALIRCDDIR/"*mdmp 1>/dev/null 2>&1; then
+			show_core_files
+			echo "Tests failed AND UnrealIRCd crashed while terminating."
+		else
+			echo "Tests failed. See errors above."
+		fi
+	fi
+	exit 1
+}
+
+if [ "$MAXPARALLEL" = "" ]; then
+	MAXPARALLEL="25"
+fi
+TIMEOUT="40"
+KEEPDBS="0"
+CRASHED="0"
+INCLUDEFILE=""
+
+UNREALIRCDDIR="/c/Program Files/UnrealIRCd 6"
+
+# Stupid? Yes!
+find tests/ -type f -exec sed -i -e 's/\#\!\/usr\/bin\/python3/\#\!\/c\/Python39\/python/g' {} \;
+
+export PYTHONPATH="`pwd`"
+export PYTHONIOENCODING=utf-8
+export TIMEOUT
+
+rm -rf logs
+mkdir logs
+mkdir logs/success
+mkdir logs/failure
+
+if [ "$1" = "-include" ]; then
+	shift
+	INCLUDEFILE="$1"
+	shift
+fi
+
+if [ "$1" = "-single" ]; then
+	MAXPARALLEL=1
+	shift
+fi
+
+if [ "$1" = "-keepdbs" ]; then
+	KEEPDBS=1
+	shift
+fi
+
+if [ "$1" = "-boot" -o "$1" = "" ]; then
+	shift
+
+	# Boot the ircd
+	echo "Booting IRC server..."
+	stopunreal
+
+	# Move old core files and minidumps to oldcores\ (don't print and ignore errors)
+	mkdir "$UNREALIRCDDIR/oldcores" 1>/dev/null 2>&1
+	mv "$UNREALIRCDDIR/"*.core "$UNREALIRCDDIR/oldcores" 1>/dev/null 2>&1
+	mv "$UNREALIRCDDIR/"*.mdmp "$UNREALIRCDDIR/oldcores" 1>/dev/null 2>&1
+
+	cp -av serverconfig/unrealircd/* "$UNREALIRCDDIR/conf/" || fail "Could not copy configuration files"
+	cd "$UNREALIRCDDIR/bin" || fail "Could not change to UnrealIRCd directory"
+	echo "Now in:"
+	pwd
+
+	if [ "$KEEPDBS" -eq 0 ]; then
+		# Delete databases
+		echo Deleting old databases...
+		mkdir "$UNREALIRCDDIR/data/old"
+		mv "$UNREALIRCDDIR"/data/*.db "$UNREALIRCDDIR/data/old/"
+		rm -rf "$UNREALIRCDDIR/data/history.old"
+		mv "$UNREALIRCDDIR/data/history" "$UNREALIRCDDIR/data/history.old"
+	fi
+
+	if [ "$INCLUDEFILE" != "" ]; then
+		echo Adding include...
+		# Add include to irc1.conf (only)
+		echo 'include "'$INCLUDEFILE'";' >>"$UNREALIRCDDIR/conf/irc1.conf"
+	fi
+
+	./unrealircd -f irc2.conf&
+	sleep 15
+	./unrealircd -f irc1.conf&
+	sleep 15
+	./unrealircd -f irc3.conf&
+	sleep 20
+	cd -
+
+	COUNTPROCS="`tasklist.exe|grep -i unrealircd|wc -l`"
+	if [ "$COUNTPROCS" -lt 3 ]; then
+		fatal "UnrealIRCd failed to boot"
+	fi
+
+	echo "Linking servers..."
+	(timeout --kill-after=5 --signal=INT 30 tests/_pre_test) || fail "UnrealIRCd servers did not link"
+	echo
+fi
+
+if [ "$1" = "" ]; then
+	# Run all tests:
+	echo "Running all tests in parallel..."
+	# NOTE: we skip services tests on Windows! Too much hassle ;)
+	find tests -type f|grep -vF '~'|grep -vF _pre_test|grep -v services/|grep -vF /db/|grep -vF /serial/|xargs -L1 -P$MAXPARALLEL irctestframework/wrapper
+	#wait
+	#^ this is annoying: 'wait' will also wait for unrealircd.exe to stop,
+	#  which hopefully will never happen, so we sleep instead:
+	sleep 45
+	echo "Running remaining tests in series..."
+	find tests/serial/ -type f|grep -vF '~'|grep -vF README|xargs -L1 -P1 irctestframework/wrapper
+	# And again, we sleep here too, what a joke... convert to some tasklist|find shit ?
+	sleep 45
+	stopunreal
+else
+	# Run specific tests:
+	echo "Running specific tests by user request..."
+	for f in $*
+	do
+		# Skip backup files and such (blah~)
+		if (echo "$f"|egrep -q '~$'); then
+			continue
+		fi
+		if [ "$f" = "tests/db/writing/history" -o "$f" = "tests/db/reading/history" ]; then
+			if ! (echo "$INCLUDEFILE"|grep -q 'crypt'); then
+				echo "WARNING: Skipping $f -- not using encryption so can't test this"
+				continue
+			fi
+		fi
+		irctestframework/wrapper $f
+	done
+fi
+
+cd logs/success
+echo
+echo "==================================================================================================="
+echo ">>> SUCCESFUL TESTS"
+for f in *.log
+do
+	name="`echo $f|sed 's/__/\//g'|sed 's/\.log//g'`"
+	if [ "$f" == "*.log" ]; then
+		continue
+	fi
+	echo "✔ $name"
+done
+cd - 1>/dev/null 2>&1
+echo "==================================================================================================="
+
+failed=0
+cd logs/failure
+for f in *.log
+do
+	name="`echo $f|sed 's/__/\//g'|sed 's/\.log//g'`"
+	if [ "$f" == "*.log" ]; then
+		continue
+	fi
+	echo
+	echo "==================================================================================================="
+	echo ">>> FAILED TEST: $name"
+	cat $f
+	echo "==================================================================================================="
+	echo
+	failed=1
+done
+
+if [ "$failed" = 1 ]; then
+	echo
+	echo "======[ SUMMARY ]======"
+	for f in *.log
+	do
+		name="`echo $f|sed 's/__/\//g'|sed 's/\.log//g'`"
+		if [ "$f" == "*.log" ]; then
+			continue
+		fi
+		echo "TEST FAILED: $name"
+	done
+fi
+
+cd - 1>/dev/null 2>&1
+
+stopunreal
+
+exit $failed
