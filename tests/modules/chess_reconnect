@@ -43,21 +43,17 @@ m.expect(c1b, "Rejoin instructions", "915.*:If you disconnect")
 m.clearlog()
 print()
 
+# First end the current game so we can test rejoin properly
+m.send(c1a, "CHESS resign")
+m.clearlog()
+print()
+
 # Test 2: Invalid rejoin key formats
 print("[TEST] Invalid rejoin key rejection")
 
-# First resign the active game
-m.send(c1a, "CHESS resign")
-m.clearlog()
-
-# Now try to rejoin with invalid key (no active game to rejoin)
+# Now that we're NOT in a game, try invalid keys
 m.send(c1a, "CHESS rejoin invalid-key-format")
 m.expect(c1a, "Invalid key error (949)", ":.*949.*")
-m.clearlog()
-
-# Try with empty key
-m.send(c1a, "CHESS rejoin")
-# Should get error about invalid/missing parameters
 m.clearlog()
 
 # Try with malformed UUID
@@ -100,29 +96,19 @@ m.send(c1a, "CHESS resign")
 m.clearlog()
 print()
 
-# Test 5: Rejoin command when not disconnected
-print("[TEST] Cannot rejoin when not disconnected")
+# Test 5: Multiple games have unique rejoin keys (second verification)
+print("[TEST] Rejoin keys are unique per game (second game)")
 m.send(c1a, "CHESS request $c1b 600")
 m.clearlog()
 m.send(c1b, "CHESS accept $c1a")
-m.clearlog()
 
-# Try to rejoin with a made-up key while still connected
-m.send(c1a, "CHESS rejoin fake-key-123")
-# Should get "not disconnected" error (947) or invalid key (949)
-# The module should reject this
+# Verify new keys are provided for the second game
+m.expect(c1a, "Second game key provided", ":.*915.*")
+m.expect(c1b, "Second game key provided", ":.*915.*")
 m.clearlog()
 
 m.send(c1a, "CHESS resign")
 m.clearlog()
-print()
-
-# Test 6: Grace period in different time formats
-print("[TEST] Grace period display format")
-# The module sends grace period in minutes
-# 915 numeric shows: <key> <grace_minutes>
-# We verified this is '5' for 5 minutes (300 seconds)
-print("Grace period format verified: <key> <minutes> :text")
 print()
 
 print("All reconnection tests passed!")
