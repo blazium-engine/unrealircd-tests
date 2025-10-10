@@ -20,7 +20,7 @@ m.send(c1a, "CHESS request $c1b 300")
 m.clearlog()
 m.send(c1b, "CHESS decline $c1a")
 m.expect(c1a, "c1a notified of decline", ":.*906.*")
-m.expect(c1b, "c1b declined", "NOTICE.*declined")
+m.expect(c1b, "c1b declined (906)", ":.*906.*declined")
 m.clearlog()
 print()
 
@@ -39,7 +39,7 @@ m.clearlog()
 
 # c1a offers draw
 m.send(c1a, "CHESS draw")
-m.expect(c1a, "c1a offered draw", "NOTICE.*offered.*draw")
+m.expect(c1a, "c1a offered draw", ":.*918.*")
 m.expect(c1b, "c1b sees draw offer", ":.*918.*")
 m.clearlog()
 

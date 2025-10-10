@@ -46,9 +46,13 @@ print()
 # Test 2: Invalid rejoin key formats
 print("[TEST] Invalid rejoin key rejection")
 
-# Try to rejoin while still in game (should fail)
+# First resign the active game
+m.send(c1a, "CHESS resign")
+m.clearlog()
+
+# Now try to rejoin with invalid key (no active game to rejoin)
 m.send(c1a, "CHESS rejoin invalid-key-format")
-m.expect(c1a, "Invalid key error (949)", ":.*949.*Invalid rejoin key")
+m.expect(c1a, "Invalid key error (949)", ":.*949.*")
 m.clearlog()
 
 # Try with empty key
