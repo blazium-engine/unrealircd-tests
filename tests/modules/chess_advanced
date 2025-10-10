@@ -70,15 +70,15 @@ m.clearlog()
 m.send(c1a, "CHESS draw")
 m.clearlog()
 
-# c1b makes a move instead of accepting (implicitly declines)
-m.send(c1b, "CHESSMOVE Nf6")
+# c1a makes a move instead of waiting (implicitly withdraws offer)
+m.send(c1a, "CHESSMOVE Nf3")
 m.expect(c1a, "c1a sees move", ":.*920.*")
 m.expect(c1b, "c1b sees move", ":.*920.*")
 m.clearlog()
 
-# c1a tries to accept non-existent draw
-m.send(c1a, "CHESS draw")
-m.expect(c1a, "No draw offer to accept", ":.*955.*")
+# c1b tries to accept non-existent draw (already withdrawn)
+m.send(c1b, "CHESS draw")
+m.expect(c1b, "No draw offer to accept", ":.*955.*")
 m.clearlog()
 
 # Cleanup
