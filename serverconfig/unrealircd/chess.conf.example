@@ -1,0 +1,80 @@
+/* 
+ * UnrealIRCd Chess Module Configuration Example
+ * 
+ * Copy this block to your unrealircd.conf file
+ */
+
+/* Load the chess module */
+loadmodule "third/chess";
+
+/* Chess module configuration (all settings are optional) */
+chess {
+	/*
+	 * Directory where game logs are stored in PGN format
+	 * Default: "chess-logs"
+	 */
+	log-directory "chess-logs";
+	
+	/*
+	 * Default time control in seconds per player
+	 * Players can specify different times when requesting games
+	 * Valid range: 60-7200 (1 minute to 2 hours)
+	 * Default: 600 (10 minutes)
+	 */
+	default-time-control 600;
+	
+	/*
+	 * Maximum number of concurrent chess games
+	 * Valid range: 1-1000
+	 * Default: 100
+	 */
+	max-concurrent-games 100;
+	
+	/*
+	 * Allow spectators to chat in chess channels
+	 * Spectators must use /CHESSOBSERVER to enable their chat
+	 * Default: yes
+	 */
+	allow-spectator-chat yes;
+	
+	/*
+	 * Seconds to wait before destroying channel after game ends
+	 * This gives players time to discuss the game
+	 * Valid range: 0-3600 (0 to 1 hour)
+	 * Default: 300 (5 minutes)
+	 */
+	auto-destroy-channel-delay 300;
+};
+
+/*
+ * Example configurations for different use cases:
+ */
+
+/* High-volume server with many games */
+/*
+chess {
+	log-directory "chess-logs";
+	default-time-control 300;  // 5-minute blitz games
+	max-concurrent-games 500;
+	allow-spectator-chat yes;
+	auto-destroy-channel-delay 120;  // 2 minutes
+};
+*/
+
+/* Tournament server with longer games */
+/*
+chess {
+	log-directory "/var/log/unrealircd/chess-tournaments";
+	default-time-control 1800;  // 30-minute games
+	max-concurrent-games 50;
+	allow-spectator-chat no;  // Players only
+	auto-destroy-channel-delay 600;  // 10 minutes for post-game analysis
+};
+*/
+
+/* Minimal configuration (all defaults) */
+/*
+chess {
+};
+*/
+
