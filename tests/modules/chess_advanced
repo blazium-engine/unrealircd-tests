@@ -41,8 +41,8 @@ m.clearlog()
 m.send(c1a, "CHESS draw")
 # Player who offers sees numeric 918, channel sees NOTICE
 m.expect(c1a, "c1a draw offer sent", ":.*918.*Draw offer sent")
-# c1b sees channel NOTICE
-m.expect(c1b, "c1b sees draw offer", "NOTICE.*offered.*draw")
+# c1b sees channel NOTICE (uses "offers" not "offered")
+m.expect(c1b, "c1b sees draw offer", "NOTICE.*offers.*draw")
 m.clearlog()
 
 # c1b accepts draw
