@@ -5,23 +5,57 @@ Tests user mode +y behavior (channels loaded from config only)
 """
 
 import irctestframework.irctest
+import time
+
+def log_test_start(test_name):
+    """Log the start of a test"""
+    print(f"[TEST] {test_name}")
+    print(f"[LOG] Starting test: {test_name} at {time.strftime('%H:%M:%S')}")
+
+def log_command(client, command):
+    """Log a command being sent"""
+    print(f"[LOG] Sending to {client.name}: {command}")
+
+def log_response(client, description, response):
+    """Log a response received"""
+    print(f"[LOG] {client.name} received {description}: {response}")
+
+def log_test_end(test_name, success=True):
+    """Log the end of a test"""
+    status = "PASSED" if success else "FAILED"
+    print(f"[LOG] Test '{test_name}' {status} at {time.strftime('%H:%M:%S')}")
+    print()
+
+print("=" * 60)
+print("WORLD MODULE - MODE TESTS")
+print("=" * 60)
+print(f"Test suite started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+print()
 
 m = irctestframework.irctest.IrcTest()
 # All clients must be on the same server for world to work
 c1a = m.new('c1a')
 c1b = m.new('c1b')
 c1c = m.new('c1c')
+print(f"[LOG] Created test clients: c1a={c1a.name}, c1b={c1b.name}, c1c={c1c.name}")
 m.connect()
+print(f"[LOG] Connected to IRC server")
+print()
 
 # Setup: Request capability
+log_test_start("Capability Request")
+log_command(c1a, "CAP REQ :world/features")
 m.send(c1a, "CAP REQ :world/features")
 # Check if capability is available (ACK) or not (NAK)
 resp = m.expect(c1a, "Capability response", ".*ACK.*world/features|.*NAK.*world/features")
+log_response(c1a, "capability response", resp)
 if "NAK" in str(resp):
     print("SKIP: World module not loaded - capability NAK'd")
     print("All mode tests skipped - module not available")
     exit(0)
+print(f"[LOG] World module capability confirmed - proceeding with mode tests")
 m.clearlog()
+log_test_end("Capability Request")
 
 m.send(c1b, "CAP REQ :world/features")
 m.expect(c1b, "Capability acknowledged", ".*ACK.*world/features")

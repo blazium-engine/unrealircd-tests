@@ -1,0 +1,161 @@
+#!/usr/bin/python3
+"""
+World Module - Commands tests
+Tests all world commands with comprehensive logging
+"""
+
+import irctestframework.irctest
+import time
+
+def log_test_start(test_name):
+    """Log the start of a test"""
+    print(f"[TEST] {test_name}")
+    print(f"[LOG] Starting test: {test_name} at {time.strftime('%H:%M:%S')}")
+
+def log_command(client, command):
+    """Log a command being sent"""
+    print(f"[LOG] Sending to {client.name}: {command}")
+
+def log_response(client, description, response):
+    """Log a response received"""
+    print(f"[LOG] {client.name} received {description}: {response}")
+
+def log_test_end(test_name, success=True):
+    """Log the end of a test"""
+    status = "PASSED" if success else "FAILED"
+    print(f"[LOG] Test '{test_name}' {status} at {time.strftime('%H:%M:%S')}")
+    print()
+
+print("=" * 60)
+print("WORLD MODULE - COMMANDS TESTS")
+print("=" * 60)
+print(f"Test suite started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+print()
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for world to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+print(f"[LOG] Created test clients: c1a={c1a.name}, c1b={c1b.name}, c1c={c1c.name}")
+m.connect()
+print(f"[LOG] Connected to IRC server")
+print()
+
+# Setup: Request capability
+log_test_start("Capability Request")
+log_command(c1a, "CAP REQ :world/features")
+m.send(c1a, "CAP REQ :world/features")
+# Check if capability is available (ACK) or not (NAK)
+resp = m.expect(c1a, "Capability response", ".*ACK.*world/features|.*NAK.*world/features")
+log_response(c1a, "capability response", resp)
+if "NAK" in str(resp):
+    print("SKIP: World module not loaded - capability NAK'd")
+    print("All command tests skipped - module not available")
+    exit(0)
+print(f"[LOG] World module capability confirmed - proceeding with command tests")
+m.clearlog()
+log_test_end("Capability Request")
+
+log_test_start("Second Client Capability")
+log_command(c1b, "CAP REQ :world/features")
+m.send(c1b, "CAP REQ :world/features")
+resp = m.expect(c1b, "Capability acknowledged", ".*ACK.*world/features")
+log_response(c1b, "capability response", resp)
+m.clearlog()
+log_test_end("Second Client Capability")
+
+log_test_start("Third Client Capability")
+log_command(c1c, "CAP REQ :world/features")
+m.send(c1c, "CAP REQ :world/features")
+resp = m.expect(c1c, "Capability acknowledged", ".*ACK.*world/features")
+log_response(c1c, "capability response", resp)
+m.clearlog()
+log_test_end("Third Client Capability")
+
+# Test 1: Join world channel
+log_test_start("Join World Channel")
+log_command(c1a, "JOIN #spawn")
+m.send(c1a, "JOIN #spawn")
+resp = m.expect(c1a, "Joined spawn channel", ".*JOIN.*#spawn")
+log_response(c1a, "join response", resp)
+m.clearlog()
+log_test_end("Join World Channel")
+
+# Test 2: WORLD join command
+log_test_start("WORLD Join Command")
+log_command(c1a, "WORLD join")
+m.send(c1a, "WORLD join")
+resp = m.expect(c1a, "World join success", ":.*2200.*")
+log_response(c1a, "world join response", resp)
+resp = m.expect(c1a, "User mode +y set", "MODE.*\\+y")
+log_response(c1a, "user mode response", resp)
+m.clearlog()
+log_test_end("WORLD Join Command")
+
+# Test 3: WORLD show command
+log_test_start("WORLD Show Command")
+log_command(c1a, "WORLD show")
+m.send(c1a, "WORLD show")
+resp = m.expect(c1a, "World info response", ":.*2202.*")
+log_response(c1a, "world show response", resp)
+m.clearlog()
+log_test_end("WORLD Show Command")
+
+# Test 4: MOVE command
+log_test_start("MOVE Command")
+log_command(c1a, "MOVE north")
+m.send(c1a, "MOVE north")
+resp = m.expect(c1a, "Move success", ":.*2210.*")
+log_response(c1a, "move response", resp)
+m.clearlog()
+log_test_end("MOVE Command")
+
+# Test 5: FACE command
+log_test_start("FACE Command")
+log_command(c1a, "FACE east")
+m.send(c1a, "FACE east")
+resp = m.expect(c1a, "Face success", ":.*2211.*")
+log_response(c1a, "face response", resp)
+m.clearlog()
+log_test_end("FACE Command")
+
+# Test 6: Second user joins
+log_test_start("Second User Join")
+log_command(c1b, "JOIN #spawn")
+m.send(c1b, "JOIN #spawn")
+resp = m.expect(c1b, "Joined spawn channel", ".*JOIN.*#spawn")
+log_response(c1b, "join response", resp)
+log_command(c1b, "WORLD join")
+m.send(c1b, "WORLD join")
+resp = m.expect(c1b, "World join success", ":.*2200.*")
+log_response(c1b, "world join response", resp)
+resp = m.expect(c1b, "User mode +y set", "MODE.*\\+y")
+log_response(c1b, "user mode response", resp)
+m.clearlog()
+log_test_end("Second User Join")
+
+# Test 7: Invalid command
+log_test_start("Invalid Command Test")
+log_command(c1a, "WORLD invalid")
+m.send(c1a, "WORLD invalid")
+resp = m.expect(c1a, "Invalid command error", ".*ERR.*")
+log_response(c1a, "error response", resp)
+m.clearlog()
+log_test_end("Invalid Command Test")
+
+# Test 8: WORLD part command
+log_test_start("WORLD Part Command")
+log_command(c1a, "WORLD part")
+m.send(c1a, "WORLD part")
+resp = m.expect(c1a, "World part success", ":.*2201.*")
+log_response(c1a, "world part response", resp)
+resp = m.expect(c1a, "User mode +y removed", "MODE.*-y")
+log_response(c1a, "user mode removal", resp)
+m.clearlog()
+log_test_end("WORLD Part Command")
+
+print("=" * 60)
+print("WORLD COMMANDS TESTS COMPLETED")
+print(f"Test suite finished at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+print("=" * 60)

@@ -5,29 +5,44 @@ Tests world capability, join, movement, and basic commands with JSON validation
 """
 
 import irctestframework.irctest
+import time
+
+print("=" * 60)
+print("WORLD MODULE - BASIC FUNCTIONALITY TESTS")
+print("=" * 60)
+print(f"Test started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+print()
 
 m = irctestframework.irctest.IrcTest()
 # All clients must be on the same server for world to work
 c1a = m.new('c1a')
 c1b = m.new('c1b')
+print(f"[LOG] Created test clients: c1a={c1a.name}, c1b={c1b.name}")
 m.connect()
+print(f"[LOG] Connected to IRC server")
+print()
 
 # Test 1: Client requests world capability
 print("[TEST] Request world capability")
+print(f"[LOG] Sending CAP REQ :world/features to {c1a.name}")
 m.send(c1a, "CAP REQ :world/features")
 # Check if capability is available (ACK) or not (NAK)
 resp = m.expect(c1a, "Capability response", ".*ACK.*world/features|.*NAK.*world/features")
+print(f"[LOG] Received capability response: {resp}")
 if "NAK" in str(resp):
     print("SKIP: World module not loaded - capability NAK'd")
     print("All basic tests skipped - module not available")
     exit(0)
+print(f"[LOG] World module capability confirmed - proceeding with tests")
 m.clearlog()
 print()
 
 # Test 2: Join world channel (created from config)
 print("[TEST] Join world channel")
+print(f"[LOG] Attempting to join #spawn channel")
 m.send(c1a, "JOIN #spawn")
-m.expect(c1a, "Joined spawn channel", ".*JOIN.*#spawn")
+join_resp = m.expect(c1a, "Joined spawn channel", ".*JOIN.*#spawn")
+print(f"[LOG] Join response: {join_resp}")
 m.clearlog()
 print()
 
