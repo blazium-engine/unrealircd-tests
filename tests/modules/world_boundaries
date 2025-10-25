@@ -1,0 +1,255 @@
+#!/usr/bin/python3
+"""
+World Module - Boundary tests
+Tests movement boundaries, position validation, and edge cases
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for world to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+m.connect()
+
+# Setup: Request capability and create world channel
+m.send(c1a, "CAP REQ :world/features")
+m.expect(c1a, "Capability acknowledged", ".*ACK.*world/features")
+m.clearlog()
+
+m.send(c1b, "CAP REQ :world/features")
+m.expect(c1b, "Capability acknowledged", ".*ACK.*world/features")
+m.clearlog()
+
+m.send(c1a, "JOIN #spawn")
+m.send(c1a, "MODE #spawn +W spawn")
+m.clearlog()
+
+m.send(c1b, "JOIN #spawn")
+m.clearlog()
+
+# Test 1: WORLD join sets initial position at respawn
+print("[TEST] Initial position at respawn")
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+print()
+
+# Test 2: Move within valid bounds
+print("[TEST] Move within valid bounds")
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "MOVE east")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+print()
+
+# Test 3: Move to edge of map (west boundary)
+print("[TEST] Move to west boundary")
+# Move all the way west
+for i in range(10):
+    m.send(c1a, "MOVE west")
+    m.expect(c1a, "Move success", ":.*2210.*")
+    m.clearlog()
+print()
+
+# Test 4: Attempt move outside west boundary
+print("[TEST] Attempt move outside west boundary")
+m.send(c1a, "MOVE west")
+m.expect(c1a, "Out of bounds error", ":.*2242.*")
+m.clearlog()
+print()
+
+# Test 5: Reset position and move to east boundary
+print("[TEST] Move to east boundary")
+m.send(c1a, "WORLD part")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Move all the way east
+for i in range(10):
+    m.send(c1a, "MOVE east")
+    m.expect(c1a, "Move success", ":.*2210.*")
+    m.clearlog()
+print()
+
+# Test 6: Attempt move outside east boundary
+print("[TEST] Attempt move outside east boundary")
+m.send(c1a, "MOVE east")
+m.expect(c1a, "Out of bounds error", ":.*2242.*")
+m.clearlog()
+print()
+
+# Test 7: Move to north boundary
+print("[TEST] Move to north boundary")
+m.send(c1a, "WORLD part")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Move all the way north
+for i in range(10):
+    m.send(c1a, "MOVE north")
+    m.expect(c1a, "Move success", ":.*2210.*")
+    m.clearlog()
+print()
+
+# Test 8: Attempt move outside north boundary
+print("[TEST] Attempt move outside north boundary")
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Out of bounds error", ":.*2242.*")
+m.clearlog()
+print()
+
+# Test 9: Move to south boundary
+print("[TEST] Move to south boundary")
+m.send(c1a, "WORLD part")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Move all the way south
+for i in range(10):
+    m.send(c1a, "MOVE south")
+    m.expect(c1a, "Move success", ":.*2210.*")
+    m.clearlog()
+print()
+
+# Test 10: Attempt move outside south boundary
+print("[TEST] Attempt move outside south boundary")
+m.send(c1a, "MOVE south")
+m.expect(c1a, "Out of bounds error", ":.*2242.*")
+m.clearlog()
+print()
+
+# Test 11: Position tracking across multiple moves
+print("[TEST] Position tracking")
+m.send(c1a, "WORLD part")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Move in a pattern
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "MOVE east")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "MOVE south")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "MOVE west")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+print()
+
+# Test 12: FACE does not change position
+print("[TEST] FACE does not change position")
+m.send(c1a, "WORLD show")
+m.expect(c1a, "World info", ":.*2202.*")
+m.clearlog()
+
+m.send(c1a, "FACE north")
+m.expect(c1a, "Face success", ":.*2211.*")
+m.clearlog()
+
+m.send(c1a, "FACE east")
+m.expect(c1a, "Face success", ":.*2211.*")
+m.clearlog()
+
+m.send(c1a, "FACE south")
+m.expect(c1a, "Face success", ":.*2211.*")
+m.clearlog()
+
+m.send(c1a, "FACE west")
+m.expect(c1a, "Face success", ":.*2211.*")
+m.clearlog()
+
+# Position should still be at respawn (we moved north-east-south-west)
+m.send(c1a, "WORLD show")
+m.expect(c1a, "World info", ":.*2202.*")
+m.clearlog()
+print()
+
+# Test 13: Corner boundaries
+print("[TEST] Corner boundaries")
+m.send(c1a, "WORLD part")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Move to northwest corner
+for i in range(10):
+    m.send(c1a, "MOVE north")
+    m.expect(c1a, "Move success", ":.*2210.*")
+    m.clearlog()
+
+for i in range(10):
+    m.send(c1a, "MOVE west")
+    m.expect(c1a, "Move success", ":.*2210.*")
+    m.clearlog()
+
+# Try to move out of northwest corner
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Out of bounds error", ":.*2242.*")
+m.clearlog()
+
+m.send(c1a, "MOVE west")
+m.expect(c1a, "Out of bounds error", ":.*2242.*")
+m.clearlog()
+print()
+
+# Test 14: Multiple users position independently
+print("[TEST] Multiple users position independently")
+m.send(c1b, "WORLD join")
+m.expect(c1b, "World join success", ":.*2200.*")
+m.clearlog()
+
+# c1a moves
+m.send(c1a, "MOVE south")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+# c1b moves
+m.send(c1b, "MOVE east")
+m.expect(c1b, "Move success", ":.*2210.*")
+m.clearlog()
+
+# c1a moves again
+m.send(c1a, "MOVE south")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+# Both should be in world independently
+m.send(c1a, "WORLD show")
+m.expect(c1a, "World info", ":.*2202.*")
+m.clearlog()
+
+m.send(c1b, "WORLD show")
+m.expect(c1b, "World info", ":.*2202.*")
+m.clearlog()
+print()
+
+print("All boundary tests completed successfully!")
+

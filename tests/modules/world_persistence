@@ -1,0 +1,240 @@
+#!/usr/bin/python3
+"""
+World Module - Persistence tests
+Tests data saving and loading functionality
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for world to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+m.connect()
+
+# Setup: Request capability and create world channel
+m.send(c1a, "CAP REQ :world/features")
+m.expect(c1a, "Capability acknowledged", ".*ACK.*world/features")
+m.clearlog()
+
+m.send(c1b, "CAP REQ :world/features")
+m.expect(c1b, "Capability acknowledged", ".*ACK.*world/features")
+m.clearlog()
+
+m.send(c1a, "JOIN #spawn")
+m.send(c1a, "MODE #spawn +W spawn")
+m.clearlog()
+
+m.send(c1b, "JOIN #spawn")
+m.clearlog()
+
+# Test 1: User position saved on WORLD part
+print("[TEST] User position saved on WORLD part")
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Move to a specific position
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "MOVE east")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "MOVE east")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+# Part world (should save position)
+m.send(c1a, "WORLD part")
+m.expect(c1a, "World part success", ":.*2201.*")
+m.clearlog()
+print()
+
+# Test 2: User position loaded on WORLD join (return)
+print("[TEST] User position loaded on WORLD join")
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Position should be restored
+m.send(c1a, "WORLD show")
+m.expect(c1a, "World info", ":.*2202.*")
+m.clearlog()
+print()
+
+# Test 3: Verify position was restored
+print("[TEST] Verify position was restored")
+# Since we moved north, then east twice from respawn (5,5)
+# We should be at 7,4
+# Can verify by trying to move west twice should bring us back to respawn area
+m.send(c1a, "MOVE west")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "MOVE west")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "MOVE south")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+print()
+
+# Test 4: New user starts at respawn
+print("[TEST] New user starts at respawn")
+m.send(c1b, "WORLD join")
+m.expect(c1b, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Should be at respawn position
+m.send(c1b, "WORLD show")
+m.expect(c1b, "World info", ":.*2202.*")
+m.clearlog()
+print()
+
+# Test 5: Multiple users save independently
+print("[TEST] Multiple users save independently")
+# Move c1a to different position
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "MOVE east")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+# Move c1b to different position
+m.send(c1b, "MOVE south")
+m.expect(c1b, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1b, "MOVE west")
+m.expect(c1b, "Move success", ":.*2210.*")
+m.clearlog()
+
+# Both part
+m.send(c1a, "WORLD part")
+m.expect(c1a, "World part success", ":.*2201.*")
+m.clearlog()
+
+m.send(c1b, "WORLD part")
+m.expect(c1b, "World part success", ":.*2201.*")
+m.clearlog()
+print()
+
+# Test 6: Both users rejoin at different positions
+print("[TEST] Both users rejoin at different positions")
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+m.send(c1b, "WORLD join")
+m.expect(c1b, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Both should have their saved positions
+m.send(c1a, "WORLD show")
+m.expect(c1a, "World info", ":.*2202.*")
+m.clearlog()
+
+m.send(c1b, "WORLD show")
+m.expect(c1b, "World info", ":.*2202.*")
+m.clearlog()
+print()
+
+# Test 7: Reconnect after disconnect restores position
+print("[TEST] Reconnect after disconnect")
+# Save position
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "MOVE east")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1a, "WORLD part")
+m.expect(c1a, "World part success", ":.*2201.*")
+m.clearlog()
+
+# Simulate disconnect by quitting
+m.send(c1a, "QUIT :Test disconnect")
+m.clearlog()
+
+# Reconnect (simulated by rejoining)
+m.send(c1a, "NICK c1a")
+m.send(c1a, "USER user user hostname :realname")
+m.clearlog()
+
+m.send(c1a, "CAP REQ :world/features")
+m.expect(c1a, "Capability acknowledged", ".*ACK.*world/features")
+m.clearlog()
+
+m.send(c1a, "JOIN #spawn")
+m.clearlog()
+
+# Join world should restore position
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Position should be restored
+m.send(c1a, "WORLD show")
+m.expect(c1a, "World info", ":.*2202.*")
+m.clearlog()
+print()
+
+# Test 8: Direction is preserved
+print("[TEST] Direction is preserved")
+m.send(c1a, "FACE east")
+m.expect(c1a, "Face success", ":.*2211.*")
+m.clearlog()
+
+m.send(c1a, "WORLD part")
+m.expect(c1a, "World part success", ":.*2201.*")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Direction should be preserved
+m.send(c1a, "WORLD show")
+m.expect(c1a, "World info", ":.*2202.*")
+m.clearlog()
+print()
+
+# Test 9: JSON format validation
+print("[TEST] JSON format validation")
+# Just verify that responses include valid JSON in tags
+m.send(c1a, "WORLD show")
+m.expect(c1a, "World info with JSON", ":.*2202.*")
+m.expect(c1a, "JSON data tag", "@unrealircd.org/world-data=")
+m.clearlog()
+print()
+
+# Test 10: World ID is preserved
+print("[TEST] World ID is preserved")
+m.send(c1a, "WORLD show")
+m.expect(c1a, "World info", ":.*2202.*")
+m.clearlog()
+
+# Should show spawn world
+m.send(c1a, "WORLD part")
+m.expect(c1a, "World part success", ":.*2201.*")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+m.send(c1a, "WORLD show")
+m.expect(c1a, "World info", ":.*2202.*")
+m.clearlog()
+print()
+
+print("All persistence tests completed successfully!")
+

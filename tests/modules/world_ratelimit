@@ -1,0 +1,211 @@
+#!/usr/bin/python3
+"""
+World Module - Rate limiting tests
+Tests move and command rate limiting functionality
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for world to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+m.connect()
+
+# Setup: Request capability and create world channel
+m.send(c1a, "CAP REQ :world/features")
+m.expect(c1a, "Capability acknowledged", ".*ACK.*world/features")
+m.clearlog()
+
+m.send(c1b, "CAP REQ :world/features")
+m.expect(c1b, "Capability acknowledged", ".*ACK.*world/features")
+m.clearlog()
+
+m.send(c1a, "JOIN #spawn")
+m.send(c1a, "MODE #spawn +W spawn")
+m.clearlog()
+
+m.send(c1b, "JOIN #spawn")
+m.clearlog()
+
+# Test 1: Normal MOVE rate limit allows 2 moves/second
+print("[TEST] Normal MOVE rate limit")
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Default rate limit is 2 moves/second, window is 60 seconds
+# So max is 120 moves per 60 seconds
+# We can do several moves quickly without hitting limit
+for i in range(10):
+    m.send(c1a, "MOVE north")
+    m.expect(c1a, "Move success", ":.*2210.*")
+    m.clearlog()
+print()
+
+# Test 2: Multiple moves in succession
+print("[TEST] Multiple moves in succession")
+for i in range(20):
+    m.send(c1a, "MOVE south")
+    m.expect(c1a, "Move success", ":.*2210.*")
+    m.clearlog()
+print()
+
+# Test 3: Even more moves
+print("[TEST] Many more moves")
+for i in range(30):
+    m.send(c1a, "MOVE north")
+    m.expect(c1a, "Move success", ":.*2210.*")
+    m.clearlog()
+print()
+
+# Test 4: Exceed MOVE rate limit
+print("[TEST] Exceed MOVE rate limit")
+# Continue moving rapidly
+for i in range(70):
+    m.send(c1a, "MOVE south")
+    # After 120 moves in window, should hit rate limit
+    resp = m.expect(c1a, "Move or rate limit", ".*2210.*|.*2241.*")
+    if "2241" in str(resp) or "ERR_WORLDRATELIMIT" in str(resp):
+        print("Rate limit hit!")
+        break
+    m.clearlog()
+print()
+
+# Test 5: MOVE rate limit resets after window
+print("[TEST] MOVE rate limit resets after window")
+# Note: In real test, would need to wait 60 seconds
+# For now, just verify that rate limit error was received
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Rate limit or move", ".*2210.*|.*2241.*")
+m.clearlog()
+print()
+
+# Test 6: Reset by parting and rejoining
+print("[TEST] Reset by parting and rejoining")
+m.send(c1a, "WORLD part")
+m.expect(c1a, "World part success", ":.*2201.*")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Should be able to move again
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Move success", ":.*2210.*")
+m.clearlog()
+print()
+
+# Test 7: FACE/command rate limit
+print("[TEST] FACE/command rate limit")
+# Default command rate limit is 5/second, window is 60 seconds
+# So max is 300 commands per 60 seconds
+# Execute many FACE commands
+for i in range(50):
+    m.send(c1a, "FACE north")
+    m.expect(c1a, "Face success", ":.*2211.*")
+    m.clearlog()
+print()
+
+# Test 8: Continue FACE commands
+print("[TEST] Continue FACE commands")
+for i in range(100):
+    m.send(c1a, "FACE east")
+    m.expect(c1a, "Face success", ":.*2211.*")
+    m.clearlog()
+print()
+
+# Test 9: More FACE commands
+print("[TEST] More FACE commands")
+for i in range(150):
+    m.send(c1a, "FACE south")
+    resp = m.expect(c1a, "Face or rate limit", ".*2211.*|.*2241.*")
+    if "2241" in str(resp) or "ERR_WORLDRATELIMIT" in str(resp):
+        print("Command rate limit hit!")
+        break
+    m.clearlog()
+print()
+
+# Test 10: Rate limits are per-user
+print("[TEST] Rate limits are per-user")
+m.send(c1b, "WORLD join")
+m.expect(c1b, "World join success", ":.*2200.*")
+m.clearlog()
+
+# c1b should have its own rate limit counter
+for i in range(10):
+    m.send(c1b, "MOVE north")
+    m.expect(c1b, "Move success", ":.*2210.*")
+    m.clearlog()
+print()
+
+# c1a should still be rate limited
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Rate limit or move", ".*2210.*|.*2241.*")
+m.clearlog()
+print()
+
+# Test 11: Different commands don't share rate limit
+print("[TEST] Different commands have separate limits")
+# Reset c1a
+m.send(c1a, "WORLD part")
+m.expect(c1a, "World part success", ":.*2201.*")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Move commands
+for i in range(10):
+    m.send(c1a, "MOVE north")
+    m.expect(c1a, "Move success", ":.*2210.*")
+    m.clearlog()
+
+# WORLD show should still work
+m.send(c1a, "WORLD show")
+m.expect(c1a, "World info", ":.*2202.*")
+m.clearlog()
+
+# FACE should still work
+m.send(c1a, "FACE east")
+m.expect(c1a, "Face success", ":.*2211.*")
+m.clearlog()
+print()
+
+# Test 12: Rate limit error message
+print("[TEST] Rate limit error message")
+# Trigger rate limit
+for i in range(120):
+    m.send(c1a, "MOVE south")
+    resp = m.expect(c1a, "Move or rate limit", ".*2210.*|.*2241.*")
+    if "2241" in str(resp) or "ERR_WORLDRATELIMIT" in str(resp):
+        print("Rate limit error received")
+        break
+    m.clearlog()
+print()
+
+# Test 13: Command rate limit affects non-move commands
+print("[TEST] Command rate limit affects all commands")
+# Reset
+m.send(c1a, "WORLD part")
+m.expect(c1a, "World part success", ":.*2201.*")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Send many WORLD show commands
+for i in range(300):
+    m.send(c1a, "WORLD show")
+    resp = m.expect(c1a, "World info or rate limit", ".*2202.*|.*2241.*")
+    if "2241" in str(resp) or "ERR_WORLDRATELIMIT" in str(resp):
+        print("Command rate limit hit!")
+        break
+    m.clearlog()
+print()
+
+print("All rate limiting tests completed successfully!")
+

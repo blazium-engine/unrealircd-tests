@@ -1,0 +1,228 @@
+#!/usr/bin/python3
+"""
+World Module - Command tests
+Tests all command variations, error conditions, and case-insensitivity
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for world to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+m.connect()
+
+# Setup: Request capability and create world channel
+m.send(c1a, "CAP REQ :world/features")
+m.expect(c1a, "Capability acknowledged", ".*ACK.*world/features")
+m.clearlog()
+
+m.send(c1b, "CAP REQ :world/features")
+m.expect(c1b, "Capability acknowledged", ".*ACK.*world/features")
+m.clearlog()
+
+m.send(c1c, "CAP REQ :world/features")
+m.expect(c1c, "Capability acknowledged", ".*ACK.*world/features")
+m.clearlog()
+
+m.send(c1a, "JOIN #spawn")
+m.send(c1a, "MODE #spawn +W spawn")
+m.clearlog()
+
+m.send(c1b, "JOIN #spawn")
+m.clearlog()
+
+# Test 1: WORLD join without capability
+print("[TEST] WORLD join without capability")
+m.send(c1c, "JOIN #spawn")
+m.send(c1c, "WORLD join")
+m.expect(c1c, "Join without capability error", ":.*2240.*")
+m.clearlog()
+print()
+
+# Setup c1c properly
+m.send(c1c, "CAP REQ :world/features")
+m.clearlog()
+
+# Test 2: WORLD join without channel mode +W
+print("[TEST] WORLD join without channel mode")
+m.send(c1c, "JOIN #regular")
+m.send(c1c, "WORLD join")
+m.expect(c1c, "No world channel error", ":.*2243.*")
+m.clearlog()
+print()
+
+# Test 3: WORLD join when already in world
+print("[TEST] WORLD join when already in world")
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "Already in world error", ":.*2245.*")
+m.clearlog()
+print()
+
+# Test 4: WORLD part when not in world
+print("[TEST] WORLD part when not in world")
+m.send(c1b, "WORLD part")
+m.expect(c1b, "Not in world error", ":.*2244.*")
+m.clearlog()
+print()
+
+# Test 5: WORLD show when not in world
+print("[TEST] WORLD show when not in world")
+m.send(c1b, "WORLD show")
+m.expect(c1b, "Not in world error", ":.*2244.*")
+m.clearlog()
+print()
+
+# Test 6: WORLD join properly
+print("[TEST] WORLD join command")
+m.send(c1b, "WORLD join")
+m.expect(c1b, "World join success", ":.*2200.*")
+m.expect(c1b, "User mode +w set", "MODE.*\\+w")
+m.clearlog()
+print()
+
+# Test 7: WORLD show info
+print("[TEST] WORLD show command")
+m.send(c1b, "WORLD show")
+m.expect(c1b, "World info received", ":.*2202.*")
+m.clearlog()
+print()
+
+# Test 8: MOVE without being in world
+print("[TEST] MOVE without being in world")
+m.send(c1c, "JOIN #spawn")
+m.send(c1c, "MOVE north")
+m.expect(c1c, "Not in world error", ":.*2244.*")
+m.clearlog()
+print()
+
+# Test 9: MOVE command - all 4 directions
+print("[TEST] MOVE command - north")
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Move north success", ":.*2210.*")
+m.clearlog()
+print()
+
+print("[TEST] MOVE command - east")
+m.send(c1a, "MOVE east")
+m.expect(c1a, "Move east success", ":.*2210.*")
+m.clearlog()
+print()
+
+print("[TEST] MOVE command - south")
+m.send(c1a, "MOVE south")
+m.expect(c1a, "Move south success", ":.*2210.*")
+m.clearlog()
+print()
+
+print("[TEST] MOVE command - west")
+m.send(c1a, "MOVE west")
+m.expect(c1a, "Move west success", ":.*2210.*")
+m.clearlog()
+print()
+
+# Test 10: MOVE invalid direction
+print("[TEST] MOVE invalid direction")
+m.send(c1a, "MOVE up")
+m.expect(c1a, "Invalid direction error", ":.*2242.*")
+m.clearlog()
+print()
+
+# Test 11: FACE without being in world
+print("[TEST] FACE without being in world")
+m.send(c1c, "FACE north")
+m.expect(c1c, "Not in world error", ":.*2244.*")
+m.clearlog()
+print()
+
+# Test 12: FACE command - all 4 directions
+print("[TEST] FACE command - north")
+m.send(c1b, "FACE north")
+m.expect(c1b, "Face north success", ":.*2211.*")
+m.clearlog()
+print()
+
+print("[TEST] FACE command - east")
+m.send(c1b, "FACE east")
+m.expect(c1b, "Face east success", ":.*2211.*")
+m.clearlog()
+print()
+
+print("[TEST] FACE command - south")
+m.send(c1b, "FACE south")
+m.expect(c1b, "Face south success", ":.*2211.*")
+m.clearlog()
+print()
+
+print("[TEST] FACE command - west")
+m.send(c1b, "FACE west")
+m.expect(c1b, "Face west success", ":.*2211.*")
+m.clearlog()
+print()
+
+# Test 13: FACE invalid direction
+print("[TEST] FACE invalid direction")
+m.send(c1b, "FACE diagonal")
+m.expect(c1b, "Invalid direction error", ":.*2242.*")
+m.clearlog()
+print()
+
+# Test 14:.h WORLD part command
+print("[TEST] WORLD part command")
+m.send(c1a, "WORLD part")
+m.expect(c1a, "World part success", ":.*2201.*")
+m.expect(c1a, "User mode +w removed", "MODE.*-w")
+m.clearlog()
+print()
+
+# Test 15: Command case-insensitivity
+print("[TEST] Command case-insensitivity")
+m.send(c1b, "world join")
+m.expect(c1b, "Already in world", ":.*2245.*")
+m.clearlog()
+
+m.send(c1b, "World join")
+m.expect(c1b, "Already in world", ":.*2245.*")
+m.clearlog()
+
+m.send(c1b, "WORLD SHOW")
+m.expect(c1b, "World info", ":.*2202.*")
+m.clearlog()
+
+m.send(c1b, "move NORTH")
+m.expect(c1b, "Move success", ":.*2210.*")
+m.clearlog()
+
+m.send(c1b, "face EAST")
+m.expect(c1b, "Face success", ":.*2211.*")
+m.clearlog()
+print()
+
+# Test 16: Invalid WORLD subcommand
+print("[TEST] Invalid WORLD subcommand")
+m.send(c1b, "WORLD invalid")
+m.expect(c1b, "Usage notice", ".*Usage.*WORLD")
+m.clearlog()
+print()
+
+# Test 17: MOVE without parameters
+print("[TEST] MOVE without parameters")
+m.send(c1b, "MOVE")
+m.expect(c1b, "Usage notice", ".*Usage.*MOVE")
+m.clearlog()
+print()
+
+# Test 18: FACE without parameters
+print("[TEST] FACE without parameters")
+m.send(c1b, "FACE")
+m.expect(c1b, "Usage notice", ".*Usage.*FACE")
+m.clearlog()
+print()
+
+print("All command tests completed successfully!")
+
