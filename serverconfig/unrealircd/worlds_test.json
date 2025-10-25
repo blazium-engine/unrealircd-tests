@@ -1,0 +1,163 @@
+{
+  "worlds": [
+    {
+      "world_id": "spawn",
+      "name": "Spawn World",
+      "description": "Starting area for new players",
+      "width": 10,
+      "height": 10,
+      "spawn_x": 5,
+      "spawn_y": 5,
+      "exits": [
+        {
+          "x": 9,
+          "y": 5,
+          "target_world": "forest",
+          "target_x": 0,
+          "target_y": 5,
+          "description": "Forest entrance"
+        }
+      ],
+      "entrances": [
+        {
+          "x": 0,
+          "y": 5,
+          "source_world": "forest",
+          "source_x": 9,
+          "source_y": 5,
+          "description": "From forest"
+        }
+      ]
+    },
+    {
+      "world_id": "forest",
+      "name": "Forest World",
+      "description": "Mysterious forest with hidden paths",
+      "width": 15,
+      "height": 15,
+      "spawn_x": 7,
+      "spawn_y": 7,
+      "exits": [
+        {
+          "x": 9,
+          "y": 5,
+          "target_world": "spawn",
+          "target_x": 0,
+          "target_y": 5,
+          "description": "Back to spawn"
+        },
+        {
+          "x": 14,
+          "y": 7,
+          "target_world": "mountain",
+          "target_x": 0,
+          "target_y": 7,
+          "description": "Mountain path"
+        }
+      ],
+      "entrances": [
+        {
+          "x": 0,
+          "y": 5,
+          "source_world": "spawn",
+          "source_x": 9,
+          "source_y": 5,
+          "description": "From spawn"
+        },
+        {
+          "x": 0,
+          "y": 7,
+          "source_world": "mountain",
+          "source_x": 14,
+          "source_y": 7,
+          "description": "From mountain"
+        }
+      ]
+    },
+    {
+      "world_id": "mountain",
+      "name": "Mountain Peak",
+      "description": "High altitude mountain with challenging terrain",
+      "width": 8,
+      "height": 8,
+      "spawn_x": 4,
+      "spawn_y": 4,
+      "exits": [
+        {
+          "x": 0,
+          "y": 7,
+          "target_world": "forest",
+          "target_x": 14,
+          "target_y": 7,
+          "description": "Down to forest"
+        }
+      ],
+      "entrances": [
+        {
+          "x": 14,
+          "y": 7,
+          "source_world": "forest",
+          "source_x": 0,
+          "source_y": 7,
+          "description": "From forest"
+        }
+      ]
+    },
+    {
+      "world_id": "test_small",
+      "name": "Small Test World",
+      "description": "Small world for basic testing",
+      "width": 5,
+      "height": 5,
+      "spawn_x": 2,
+      "spawn_y": 2,
+      "exits": [],
+      "entrances": []
+    },
+    {
+      "world_id": "test_large",
+      "name": "Large Test World",
+      "description": "Large world for stress testing",
+      "width": 100,
+      "height": 100,
+      "spawn_x": 50,
+      "spawn_y": 50,
+      "exits": [
+        {
+          "x": 99,
+          "y": 50,
+          "target_world": "test_small",
+          "target_x": 0,
+          "target_y": 2,
+          "description": "To small world"
+        }
+      ],
+      "entrances": [
+        {
+          "x": 0,
+          "y": 2,
+          "source_world": "test_small",
+          "source_x": 99,
+          "source_y": 50,
+          "description": "From small world"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "default_world": "spawn",
+    "save_interval": 30,
+    "rate_limit_moves": 10,
+    "rate_limit_window": 60,
+    "rate_limit_commands": 20,
+    "rate_limit_command_window": 60,
+    "enable_persistence": true,
+    "enable_teleportation": true,
+    "enable_cross_server_sync": true,
+    "message_tags": {
+      "world/location": true,
+      "world/direction": true,
+      "world/grid": false
+    }
+  }
+}

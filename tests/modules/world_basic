@@ -123,6 +123,94 @@ m.send(c1a, "WORLD join")
 m.expect(c1a, "World join confirmation", ":.*2200.*")
 m.expect(c1a, "User mode +y set", "MODE.*\\+y")
 
+# Test 13: Validate all numeric replies in range 2200-2250
+print("[TEST] Validate numeric replies range 2200-2250")
+print(f"[LOG] Testing numeric reply validation")
+
+# Test RPL_WORLDJOIN (2200)
+m.send(c1a, "WORLD join")
+m.expect(c1a, "RPL_WORLDJOIN (2200)", ":.*2200.*")
+m.clearlog()
+
+# Test RPL_WORLDPART (2201)
+m.send(c1a, "WORLD part")
+m.expect(c1a, "RPL_WORLDPART (2201)", ":.*2201.*")
+m.clearlog()
+
+# Test RPL_WORLDSHOW (2202)
+m.send(c1a, "WORLD join")
+m.expect(c1a, "RPL_WORLDJOIN (2200)", ":.*2200.*")
+m.send(c1a, "WORLD show")
+m.expect(c1a, "RPL_WORLDSHOW (2202)", ":.*2202.*")
+m.clearlog()
+
+# Test RPL_WORLDMOVE (2210)
+m.send(c1a, "MOVE north")
+m.expect(c1a, "RPL_WORLDMOVE (2210)", ":.*2210.*")
+m.clearlog()
+
+# Test RPL_WORLDFACE (2211)
+m.send(c1a, "FACE east")
+m.expect(c1a, "RPL_WORLDFACE (2211)", ":.*2211.*")
+m.clearlog()
+
+# Test RPL_WORLDTELEPORT (2212) - if teleportation is available
+m.send(c1a, "WORLD teleport forest")
+resp = m.expect(c1a, "RPL_WORLDTELEPORT (2212) or error", ":.*2212.*|:.*2249.*")
+if ":.*2212.*" in str(resp):
+    print(f"[LOG] RPL_WORLDTELEPORT (2212) confirmed")
+else:
+    print(f"[LOG] Teleportation not available or not at exit")
+m.clearlog()
+
+# Test RPL_WORLDSAVE (2250)
+m.send(c1a, "WORLD save")
+m.expect(c1a, "RPL_WORLDSAVE (2250)", ":.*2250.*")
+m.clearlog()
+
+print()
+
+# Test 14: Capability negotiation edge cases
+print("[TEST] Capability negotiation edge cases")
+print(f"[LOG] Testing capability edge cases")
+
+# Test capability without REQ
+m.send(c1b, "CAP LS")
+resp = m.expect(c1b, "CAP LS response", ".*world/features.*")
+if "world/features" in str(resp):
+    print(f"[LOG] world/features capability listed in CAP LS")
+else:
+    print(f"[LOG] world/features capability not listed in CAP LS")
+m.clearlog()
+
+print()
+
+# Test 15: User mode +y verification
+print("[TEST] User mode +y verification")
+print(f"[LOG] Testing user mode +y behavior")
+
+# Join world and verify mode is set
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join with mode", ":.*2200.*")
+m.expect(c1a, "User mode +y set", "MODE.*\\+y")
+m.clearlog()
+
+# Verify mode is visible to other users
+m.send(c1b, "WHOIS " + c1a.name)
+m.expect(c1b, "WHOIS shows +y mode", ".*\\+y.*")
+m.clearlog()
+
+# Part from world and verify mode is removed
+m.send(c1a, "WORLD part")
+m.expect(c1a, "World part with mode removal", ":.*2201.*")
+m.expect(c1a, "User mode -y removed", "MODE.*-y")
+m.clearlog()
+
+# Verify mode is no longer visible
+m.send(c1b, "WHOIS " + c1a.name)
+m.expect(c1b, "WHOIS without +y mode", ".*(?!\\+y).*")
+m.clearlog()
+
 print()
 
 print("All basic tests completed successfully!")

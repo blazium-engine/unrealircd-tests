@@ -26,9 +26,8 @@ m.send(c2a, "CAP REQ :world/features")
 m.expect(c2a, "Capability acknowledged", ".*ACK.*world/features")
 m.clearlog()
 
-# Create world channel on server 1
+# Join pre-configured world channel on server 1
 m.send(c1a, "JOIN #spawn")
-m.send(c1a, "MODE #spawn +W spawn")
 m.clearlog()
 
 # Join channel on server 2
@@ -116,9 +115,8 @@ print()
 
 # Test 11: Cross-server teleportation
 print("[TEST] Cross-server teleportation")
-# Create forest channel on server 2
+# Join pre-configured forest channel on server 2
 m.send(c2a, "JOIN #forest")
-m.send(c2a, "MODE #forest +W forest")
 m.clearlog()
 
 # Move c1a to exit point (would need to move to 9,5 in spawn)

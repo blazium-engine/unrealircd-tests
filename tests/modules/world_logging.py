@@ -100,3 +100,31 @@ def log_boundary_test(client, position):
 def log_teleport_test(client, from_world, to_world):
     """Log teleportation test"""
     print(f"[LOG] Testing teleportation from {from_world} to {to_world} for {client.name}")
+
+def log_server_sync(server, action, details):
+    """Log server sync events"""
+    print(f"[SYNC] {server}: {action} - {details}")
+
+def log_message_tag(tag_name, tag_value):
+    """Log message tag validation"""
+    print(f"[TAG] {tag_name}={tag_value}")
+
+def log_multi_client(clients, action):
+    """Log multi-client scenarios"""
+    if isinstance(clients, dict):
+        client_names = [client.name for client in clients.values()]
+    else:
+        client_names = [client.name for client in clients]
+    print(f"[MULTI] Clients {client_names}: {action}")
+
+def log_edge_case(scenario, expected, actual):
+    """Log edge case results"""
+    print(f"[EDGE] {scenario}: expected={expected}, actual={actual}")
+
+def log_info(message):
+    """Log informational messages"""
+    print(f"[LOG] {message}")
+
+def log_error(message):
+    """Log error messages"""
+    print(f"[ERROR] {message}")

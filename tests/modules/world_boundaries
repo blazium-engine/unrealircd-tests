@@ -27,7 +27,6 @@ m.expect(c1b, "Capability acknowledged", ".*ACK.*world/features")
 m.clearlog()
 
 m.send(c1a, "JOIN #spawn")
-m.send(c1a, "MODE #spawn +W spawn")
 m.clearlog()
 
 m.send(c1b, "JOIN #spawn")
@@ -256,5 +255,141 @@ m.expect(c1b, "World info", ":.*2202.*")
 m.clearlog()
 print()
 
+# Test 15: Diagonal boundary attempts
+print("[TEST] Diagonal boundary attempts")
+print(f"[LOG] Testing diagonal boundary scenarios")
+
+# Try to move diagonally by combining movements
+m.send(c1a, "MOVE north")
+m.expect(c1a, "North move", ":.*2210.*")
+m.send(c1a, "MOVE east")
+m.expect(c1a, "East move", ":.*2210.*")
+# Now at northeast corner, try to move further
+m.send(c1a, "MOVE north")
+resp = m.expect(c1a, "North boundary test", ":.*2210.*|:.*2243.*")
+if ":.*2243.*" in str(resp):
+    print(f"[LOG] North boundary hit at diagonal position")
+m.clearlog()
+
+m.send(c1a, "MOVE east")
+resp = m.expect(c1a, "East boundary test", ":.*2210.*|:.*2243.*")
+if ":.*2243.*" in str(resp):
+    print(f"[LOG] East boundary hit at diagonal position")
+m.clearlog()
+print()
+
+# Test 16: Rapid boundary hit sequences
+print("[TEST] Rapid boundary hit sequences")
+print(f"[LOG] Testing rapid boundary hit scenarios")
+
+# Move to boundary and try multiple boundary hits rapidly
+for i in range(5):
+    m.send(c1a, "MOVE north")
+    resp = m.expect(c1a, f"Rapid boundary hit {i+1}", ":.*2210.*|:.*2243.*")
+    if ":.*2243.*" in str(resp):
+        print(f"[LOG] Boundary hit at rapid attempt {i+1}")
+        # Try hitting boundary multiple times
+        for j in range(3):
+            m.send(c1a, "MOVE north")
+            m.expect(c1a, f"Boundary hit {j+1}", ":.*2243.*")
+        break
+m.clearlog()
+print()
+
+# Test 17: Boundary messages include proper location tags
+print("[TEST] Boundary messages include proper location tags")
+print(f"[LOG] Testing boundary message tags")
+
+# Move to boundary and verify tags are present
+m.send(c1a, "MOVE north")
+resp = m.expect(c1a, "Boundary move with tags", ":.*2210.*|:.*2243.*")
+
+# Verify location tag is present even on boundary hit
+if "@world/location=" in str(resp):
+    print(f"[LOG] Location tag present in boundary response")
+else:
+    print(f"[LOG] Location tag missing in boundary response")
+
+# Verify direction tag is present
+if "@world/direction=" in str(resp):
+    print(f"[LOG] Direction tag present in boundary response")
+else:
+    print(f"[LOG] Direction tag missing in boundary response")
+
+m.clearlog()
+print()
+
+# Test 18: Multiple users at boundaries
+print("[TEST] Multiple users at boundaries")
+print(f"[LOG] Testing multiple users at boundaries")
+
+# Move both users to different boundaries
+m.send(c1a, "MOVE north")
+m.expect(c1a, "c1a north move", ":.*2210.*|:.*2243.*")
+
+m.send(c1b, "MOVE south")
+m.expect(c1b, "c1b south move", ":.*2210.*|:.*2243.*")
+
+# Each should see the other's movement
+m.expect(c1a, "c1a sees c1b move", "WORLD.*MOVE")
+m.expect(c1b, "c1b sees c1a move", "WORLD.*MOVE")
+
+log_info("Multiple users handled boundaries appropriately")
+m.clearlog()
+print()
+
+# Test 19: Boundary with different world sizes
+print("[TEST] Boundary with different world sizes")
+print(f"[LOG] Testing boundaries with different world configurations")
+
+# Test with small world (5x5)
+m.send(c1a, "JOIN #test_small")
+m.clearlog()
+
+m.send(c1a, "WORLD join")
+m.expect(c1a, "Small world join", ":.*2200.*")
+m.clearlog()
+
+# Try to move beyond small world boundaries
+for i in range(8):  # More than 5x5 size
+    m.send(c1a, "MOVE north")
+    resp = m.expect(c1a, f"Small world move {i+1}", ":.*2210.*|:.*2243.*")
+    if ":.*2243.*" in str(resp):
+        print(f"[LOG] Small world boundary hit at move {i+1}")
+        break
+
+m.clearlog()
+
+# Return to spawn world
+m.send(c1a, "JOIN #spawn")
+m.clearlog()
+print()
+
+# Test 20: Final boundary verification
+print("[TEST] Final boundary verification")
+print(f"[LOG] Final boundary test verification")
+
+# Verify all users can still move after boundary tests
+m.send(c1a, "WORLD show")
+m.expect(c1a, "Final c1a world info", ":.*2202.*")
+
+m.send(c1b, "WORLD show")
+m.expect(c1b, "Final c1b world info", ":.*2202.*")
+
+# Perform final movement to verify functionality
+m.send(c1a, "MOVE south")
+m.expect(c1a, "Final c1a move", ":.*2210.*")
+
+m.send(c1b, "MOVE north")
+m.expect(c1b, "Final c1b move", ":.*2210.*")
+
+log_info("All boundary tests completed successfully")
+m.clearlog()
+print()
+
 print("All boundary tests completed successfully!")
+
+def log_info(message):
+    """Log informational messages"""
+    print(f"[LOG] {message}")
 

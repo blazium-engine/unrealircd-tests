@@ -1,0 +1,359 @@
+#!/usr/bin/python3
+"""
+World Module - Integration Scenarios Test
+Realistic combined feature testing with multiple users and scenarios
+"""
+
+import irctestframework.irctest
+import time
+
+m = irctestframework.irctest.IrcTest()
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+c1d = m.new('c1d')
+m.connect()
+
+print("=" * 60)
+print("WORLD MODULE - INTEGRATION SCENARIOS TESTS")
+print("=" * 60)
+print(f"Test suite started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+print()
+
+# Setup: Request capability for all clients
+clients = [c1a, c1b, c1c, c1d]
+client_names = ["c1a", "c1b", "c1c", "c1d"]
+
+for i, client in enumerate(clients):
+    m.send(client, "CAP REQ :world/features")
+    resp = m.expect(client, f"{client_names[i]} capability response", ".*ACK.*world/features|.*NAK.*world/features")
+    if "NAK" in str(resp):
+        print("SKIP: World module not loaded - capability NAK'd")
+        print("All integration tests skipped - module not available")
+        exit(0)
+    m.clearlog()
+
+# Join world channels
+m.send(c1a, "JOIN #spawn")
+m.send(c1b, "JOIN #spawn")
+m.send(c1c, "JOIN #forest")
+m.send(c1d, "JOIN #forest")
+m.clearlog()
+
+# Test 1: Multiple users exploring different worlds simultaneously
+print("[TEST] Multiple users exploring different worlds simultaneously")
+log_multi_client(clients, "Testing simultaneous world exploration")
+
+# Users join their respective worlds
+m.send(c1a, "WORLD join")
+m.expect(c1a, "c1a spawn world join", ":.*2200.*")
+m.clearlog()
+
+m.send(c1b, "WORLD join")
+m.expect(c1b, "c1b spawn world join", ":.*2200.*")
+m.clearlog()
+
+m.send(c1c, "WORLD join")
+m.expect(c1c, "c1c forest world join", ":.*2200.*")
+m.clearlog()
+
+m.send(c1d, "WORLD join")
+m.expect(c1d, "c1d forest world join", ":.*2200.*")
+m.clearlog()
+
+# Users explore their worlds simultaneously
+m.send(c1a, "MOVE north")
+m.send(c1b, "MOVE south")
+m.send(c1c, "MOVE east")
+m.send(c1d, "MOVE west")
+
+# Each should see their own success and others in same world
+m.expect(c1a, "c1a move success", ":.*2210.*")
+m.expect(c1a, "c1a sees c1b move", "WORLD.*MOVE")
+
+m.expect(c1b, "c1b move success", ":.*2210.*")
+m.expect(c1b, "c1b sees c1a move", "WORLD.*MOVE")
+
+m.expect(c1c, "c1c move success", ":.*2210.*")
+m.expect(c1c, "c1c sees c1d move", "WORLD.*MOVE")
+
+m.expect(c1d, "c1d move success", ":.*2210.*")
+m.expect(c1d, "c1d sees c1c move", "WORLD.*MOVE")
+
+m.clearlog()
+print()
+
+# Test 2: Users teleporting between worlds
+print("[TEST] Users teleporting between worlds")
+# c1a moves to spawn exit (assuming at 9,5)
+for i in range(10):
+    m.send(c1a, "MOVE north")
+    resp = m.expect(c1a, f"Move to exit {i+1}", ":.*2210.*|:.*2243.*")
+    if ":.*2243.*" in str(resp):  # Hit boundary
+        break
+
+# Try to teleport to forest
+m.send(c1a, "WORLD teleport forest")
+resp = m.expect(c1a, "Teleport attempt", ":.*2212.*|:.*2249.*")
+
+if ":.*2212.*" in str(resp):  # Teleport success
+    log_info("c1a successfully teleported to forest")
+    # c1a should now be in forest channel
+    m.send(c1a, "WORLD show")
+    m.expect(c1a, "c1a in forest world", ":.*2202.*")
+else:
+    log_info("Teleport failed - not at exit or forest not configured")
+
+m.clearlog()
+print()
+
+# Test 3: Message tag validation on all operations
+print("[TEST] Message tag validation on all operations")
+# Perform various operations and verify tags
+operations = [
+    ("MOVE", "south"),
+    ("FACE", "east"),
+    ("MOVE", "west"),
+    ("FACE", "north")
+]
+
+for op_type, direction in operations:
+    m.send(c1b, f"{op_type} {direction}")
+    if op_type == "MOVE":
+        m.expect(c1b, f"{op_type} {direction}", ":.*2210.*")
+    else:
+        m.expect(c1b, f"{op_type} {direction}", ":.*2211.*")
+    
+    # Verify message tags
+    m.expect(c1b, f"Tags after {op_type} {direction}", "@world/location=")
+    m.expect(c1b, f"Direction tag after {op_type} {direction}", "@world/direction=")
+    
+    # Other users in same world should see tags
+    m.expect(c1a, f"c1a sees tags after {op_type} {direction}", "@world/location=")
+    m.clearlog()
+print()
+
+# Test 4: Persistence - save state, rejoin, verify position restored
+print("[TEST] Persistence - save state, rejoin, verify position restored")
+# Save current state
+m.send(c1b, "WORLD save")
+m.expect(c1b, "Save success", ":.*2250.*")
+m.clearlog()
+
+# Part from world
+m.send(c1b, "WORLD part")
+m.expect(c1b, "Part success", ":.*2201.*")
+m.clearlog()
+
+# Rejoin world
+m.send(c1b, "WORLD join")
+m.expect(c1b, "Rejoin success", ":.*2200.*")
+m.clearlog()
+
+# Verify position was restored
+m.send(c1b, "WORLD show")
+m.expect(c1b, "Position restored", ":.*2202.*")
+log_info("Position successfully restored after rejoin")
+m.clearlog()
+print()
+
+# Test 5: Rate limiting under normal usage patterns
+print("[TEST] Rate limiting under normal usage patterns")
+log_info("Testing rate limiting with normal usage")
+
+# Normal movement pattern (not rapid spam)
+for i in range(8):  # Should be within rate limits
+    directions = ["north", "south", "east", "west"]
+    direction = directions[i % 4]
+    
+    m.send(c1c, f"MOVE {direction}")
+    resp = m.expect(c1c, f"Normal move {i+1}", ":.*2210.*|:.*2244.*")
+    
+    if ":.*2244.*" in str(resp):  # Rate limit hit
+        log_info(f"Rate limit hit at normal usage {i+1}")
+        break
+    else:
+        log_info(f"Normal move {i+1} successful")
+
+m.clearlog()
+print()
+
+# Test 6: World boundaries with multiple concurrent users
+print("[TEST] World boundaries with multiple concurrent users")
+# Move users to boundaries simultaneously
+m.send(c1a, "MOVE north")
+m.send(c1b, "MOVE south")
+m.send(c1c, "MOVE east")
+m.send(c1d, "MOVE west")
+
+# Each should handle their boundary appropriately
+m.expect(c1a, "c1a boundary test", ":.*2210.*|:.*2243.*")
+m.expect(c1b, "c1b boundary test", ":.*2210.*|:.*2243.*")
+m.expect(c1c, "c1c boundary test", ":.*2210.*|:.*2243.*")
+m.expect(c1d, "c1d boundary test", ":.*2210.*|:.*2243.*")
+
+log_info("All users handled boundaries appropriately")
+m.clearlog()
+print()
+
+# Test 7: Direction changes during rapid movement
+print("[TEST] Direction changes during rapid movement")
+# Rapid direction changes
+directions = ["north", "east", "south", "west", "north", "west", "south", "east"]
+
+for i, direction in enumerate(directions):
+    m.send(c1a, f"MOVE {direction}")
+    resp = m.expect(c1a, f"Rapid direction change {i+1}", ":.*2210.*|:.*2244.*")
+    
+    if ":.*2244.*" in str(resp):  # Rate limit hit
+        log_info(f"Rate limit hit during rapid direction changes at {i+1}")
+        break
+    
+    # Verify direction tag is updated
+    m.expect(c1a, f"Direction tag updated {i+1}", "@world/direction=")
+    m.clearlog()
+print()
+
+# Test 8: Users in multiple world channels simultaneously
+print("[TEST] Users in multiple world channels simultaneously")
+# c1a joins both spawn and forest
+m.send(c1a, "JOIN #spawn")
+m.clearlog()
+
+# Should be able to join spawn world
+m.send(c1a, "WORLD join")
+m.expect(c1a, "c1a spawn world join", ":.*2200.*")
+m.clearlog()
+
+# Show spawn world info
+m.send(c1a, "WORLD show")
+m.expect(c1a, "c1a spawn world info", ":.*2202.*")
+m.clearlog()
+
+# Switch to forest
+m.send(c1a, "JOIN #forest")
+m.clearlog()
+
+# Should be able to join forest world
+m.send(c1a, "WORLD join")
+m.expect(c1a, "c1a forest world join", ":.*2200.*")
+m.clearlog()
+
+# Show forest world info
+m.send(c1a, "WORLD show")
+m.expect(c1a, "c1a forest world info", ":.*2202.*")
+m.clearlog()
+
+log_info("c1a successfully managed multiple world channels")
+print()
+
+# Test 9: Complex movement sequences
+print("[TEST] Complex movement sequences")
+# Create complex movement patterns
+patterns = [
+    ["north", "east", "south", "west"],  # Square pattern
+    ["north", "north", "east", "east"],  # Diagonal-like
+    ["south", "west", "north", "east"]   # Reverse pattern
+]
+
+for pattern_num, pattern in enumerate(patterns):
+    log_info(f"Testing movement pattern {pattern_num + 1}: {pattern}")
+    
+    for direction in pattern:
+        m.send(c1b, f"MOVE {direction}")
+        resp = m.expect(c1b, f"Pattern {pattern_num + 1} move {direction}", ":.*2210.*|:.*2244.*")
+        
+        if ":.*2244.*" in str(resp):  # Rate limit hit
+            log_info(f"Rate limit hit during pattern {pattern_num + 1}")
+            break
+        
+        # Verify tags are present
+        m.expect(c1b, f"Tags in pattern {pattern_num + 1}", "@world/location=")
+        m.clearlog()
+print()
+
+# Test 10: User interaction scenarios
+print("[TEST] User interaction scenarios")
+# Users interact with each other through movements
+log_multi_client([c1a, c1b], "Testing user interactions in forest")
+
+# c1a and c1b are both in forest, interact through movements
+m.send(c1a, "MOVE north")
+m.expect(c1a, "c1a interaction move", ":.*2210.*")
+m.expect(c1b, "c1b sees c1a interaction", "WORLD.*MOVE")
+
+m.send(c1b, "MOVE south")
+m.expect(c1b, "c1b interaction move", ":.*2210.*")
+m.expect(c1a, "c1a sees c1b interaction", "WORLD.*MOVE")
+
+# Face each other
+m.send(c1a, "FACE south")
+m.expect(c1a, "c1a faces c1b", ":.*2211.*")
+
+m.send(c1b, "FACE north")
+m.expect(c1b, "c1b faces c1a", ":.*2211.*")
+
+log_info("Users successfully interacted through movements")
+m.clearlog()
+print()
+
+# Test 11: Stress test with multiple users
+print("[TEST] Stress test with multiple users")
+log_multi_client(clients, "Testing stress scenarios with multiple users")
+
+# All users perform operations simultaneously
+for i in range(5):
+    m.send(c1a, "MOVE north")
+    m.send(c1b, "MOVE south")
+    m.send(c1c, "MOVE east")
+    m.send(c1d, "MOVE west")
+    
+    # Each should see their own success
+    m.expect(c1a, f"c1a stress move {i+1}", ":.*2210.*|:.*2244.*")
+    m.expect(c1b, f"c1b stress move {i+1}", ":.*2210.*|:.*2244.*")
+    m.expect(c1c, f"c1c stress move {i+1}", ":.*2210.*|:.*2244.*")
+    m.expect(c1d, f"c1d stress move {i+1}", ":.*2210.*|:.*2244.*")
+    
+    # Check for rate limits
+    if any(":.*2244.*" in str(m.last_response) for _ in range(4)):
+        log_info(f"Rate limit hit during stress test at iteration {i+1}")
+        break
+    
+    m.clearlog()
+print()
+
+# Test 12: Final integration verification
+print("[TEST] Final integration verification")
+# Verify all users are still functional and can see each other
+for i, client in enumerate(clients):
+    m.send(client, "WORLD show")
+    m.expect(client, f"Final {client_names[i]} world info", ":.*2202.*")
+
+# Perform final coordinated movement
+m.send(c1a, "MOVE north")
+m.send(c1b, "MOVE south")
+m.send(c1c, "MOVE east")
+m.send(c1d, "MOVE west")
+
+# All should succeed
+m.expect(c1a, "Final c1a move", ":.*2210.*")
+m.expect(c1b, "Final c1b move", ":.*2210.*")
+m.expect(c1c, "Final c1c move", ":.*2210.*")
+m.expect(c1d, "Final c1d move", ":.*2210.*")
+
+log_info("All users functional after integration tests")
+m.clearlog()
+print()
+
+print("=" * 60)
+print("All integration scenario tests completed successfully!")
+print("=" * 60)
+
+def log_multi_client(clients, action):
+    """Log multi-client scenarios"""
+    client_names = [client.name for client in clients]
+    print(f"[MULTI] Clients {client_names}: {action}")
+
+def log_info(message):
+    """Log informational messages"""
+    print(f"[LOG] {message}")

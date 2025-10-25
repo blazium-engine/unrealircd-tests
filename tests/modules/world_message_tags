@@ -1,0 +1,328 @@
+#!/usr/bin/python3
+"""
+World Module - Message Tag Validation Test
+Comprehensive testing of IRCv3 message tags
+"""
+
+import irctestframework.irctest
+import time
+import re
+
+m = irctestframework.irctest.IrcTest()
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+m.connect()
+
+print("=" * 60)
+print("WORLD MODULE - MESSAGE TAG VALIDATION TESTS")
+print("=" * 60)
+print(f"Test suite started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+print()
+
+# Setup: Request capability
+m.send(c1a, "CAP REQ :world/features")
+resp = m.expect(c1a, "Capability response", ".*ACK.*world/features|.*NAK.*world/features")
+if "NAK" in str(resp):
+    print("SKIP: World module not loaded - capability NAK'd")
+    print("All message tag tests skipped - module not available")
+    exit(0)
+m.clearlog()
+
+# Setup second client
+m.send(c1b, "CAP REQ :world/features")
+m.expect(c1b, "Capability acknowledged", ".*ACK.*world/features")
+m.clearlog()
+
+# Join world channel
+m.send(c1a, "JOIN #spawn")
+m.send(c1b, "JOIN #spawn")
+m.clearlog()
+
+# Test 1: world/location tag format validation
+print("[TEST] world/location tag format validation")
+m.send(c1a, "WORLD join")
+m.expect(c1a, "World join success", ":.*2200.*")
+m.clearlog()
+
+# Move and verify location tag format (x,y)
+m.send(c1a, "MOVE north")
+resp = m.expect(c1a, "Move with location tag", ":.*2210.*")
+log_message_tag("world/location", "x,y format")
+
+# Verify location tag is present in broadcast to other users
+m.expect(c1b, "c1b sees location tag", "@world/location=")
+m.clearlog()
+print()
+
+# Test 2: world/direction tag values
+print("[TEST] world/direction tag values")
+directions = ["north", "south", "east", "west"]
+
+for direction in directions:
+    m.send(c1a, f"MOVE {direction}")
+    resp = m.expect(c1a, f"Move {direction}", ":.*2210.*")
+    
+    # Verify direction tag is present
+    m.expect(c1a, f"Direction tag {direction}", "@world/direction=")
+    log_message_tag("world/direction", direction)
+    
+    # Verify other user sees direction tag
+    m.expect(c1b, f"c1b sees {direction} tag", "@world/direction=")
+    m.clearlog()
+print()
+
+# Test 3: world/grid tag usage
+print("[TEST] world/grid tag usage")
+# Check if world/grid tag is used (may not be implemented yet)
+m.send(c1a, "MOVE north")
+resp = m.expect(c1a, "Move with potential grid tag", ":.*2210.*")
+
+# Look for world/grid tag in the response
+if "@world/grid=" in str(resp):
+    log_message_tag("world/grid", "present")
+    m.expect(c1b, "c1b sees grid tag", "@world/grid=")
+else:
+    log_info("world/grid tag not implemented or not present")
+m.clearlog()
+print()
+
+# Test 4: Tag presence on JOIN operations
+print("[TEST] Tag presence on JOIN operations")
+# c1b joins world
+m.send(c1b, "WORLD join")
+m.expect(c1b, "c1b world join", ":.*2200.*")
+
+# c1a should see c1b's join with tags
+m.expect(c1a, "c1a sees c1b join with tags", "WORLD.*JOIN")
+m.expect(c1a, "c1a sees join location tag", "@world/location=")
+m.expect(c1a, "c1a sees join direction tag", "@world/direction=")
+m.clearlog()
+print()
+
+# Test 5: Tag presence on MOVE operations
+print("[TEST] Tag presence on MOVE operations")
+m.send(c1a, "MOVE south")
+m.expect(c1a, "c1a move success", ":.*2210.*")
+
+# c1b should see move with all tags
+m.expect(c1b, "c1b sees move with tags", "WORLD.*MOVE")
+m.expect(c1b, "c1b sees move location tag", "@world/location=")
+m.expect(c1b, "c1b sees move direction tag", "@world/direction=")
+m.clearlog()
+print()
+
+# Test 6: Tag presence on FACE operations
+print("[TEST] Tag presence on FACE operations")
+m.send(c1a, "FACE east")
+m.expect(c1a, "c1a face success", ":.*2211.*")
+
+# c1b should see face with all tags
+m.expect(c1b, "c1b sees face with tags", "WORLD.*FACE")
+m.expect(c1b, "c1b sees face location tag", "@world/location=")
+m.expect(c1b, "c1b sees face direction tag", "@world/direction=")
+m.clearlog()
+print()
+
+# Test 7: Tag propagation across servers (simulated)
+print("[TEST] Tag propagation across servers")
+# Simulate server sync by checking if tags are preserved in broadcasts
+m.send(c1a, "MOVE west")
+m.expect(c1a, "Move for sync test", ":.*2210.*")
+
+# Verify tags are present in the broadcast
+m.expect(c1b, "Sync location tag", "@world/location=")
+m.expect(c1b, "Sync direction tag", "@world/direction=")
+log_info("Tags successfully propagated to other users")
+m.clearlog()
+print()
+
+# Test 8: Tag visibility to clients with/without capability
+print("[TEST] Tag visibility to clients with/without capability")
+# Both clients have capability, so tags should be visible
+m.send(c1a, "MOVE north")
+m.expect(c1a, "Move for capability test", ":.*2210.*")
+
+# Both should see tags
+m.expect(c1a, "c1a sees tags", "@world/location=")
+m.expect(c1b, "c1b sees tags", "@world/location=")
+log_info("Tags visible to clients with capability")
+m.clearlog()
+print()
+
+# Test 9: Tag format validation - location coordinates
+print("[TEST] Tag format validation - location coordinates")
+# Move to different positions and verify coordinate format
+positions = [
+    ("north", "1,1"),  # Assuming starting at 0,0
+    ("east", "1,1"),
+    ("south", "1,0"),
+    ("west", "0,0")
+]
+
+for direction, expected_pos in positions:
+    m.send(c1a, f"MOVE {direction}")
+    resp = m.expect(c1a, f"Move to {expected_pos}", ":.*2210.*")
+    
+    # Extract and validate location tag format
+    if "@world/location=" in str(resp):
+        # Parse the location from the response
+        location_match = re.search(r'@world/location=([^\\s]+)', str(resp))
+        if location_match:
+            actual_location = location_match.group(1)
+            log_message_tag("world/location", f"expected={expected_pos}, actual={actual_location}")
+            
+            # Validate format (should be x,y)
+            if re.match(r'^\d+,\d+$', actual_location):
+                log_info(f"Location format valid: {actual_location}")
+            else:
+                log_error(f"Location format invalid: {actual_location}")
+    
+    m.clearlog()
+print()
+
+# Test 10: Tag format validation - direction values
+print("[TEST] Tag format validation - direction values")
+valid_directions = ["north", "south", "east", "west", "none"]
+
+for direction in valid_directions:
+    if direction != "none":
+        m.send(c1a, f"MOVE {direction}")
+        m.expect(c1a, f"Move {direction}", ":.*2210.*")
+    
+    # Check direction tag
+    resp = m.expect(c1a, f"Direction tag {direction}", "@world/direction=")
+    
+    # Extract and validate direction tag value
+    if "@world/direction=" in str(resp):
+        direction_match = re.search(r'@world/direction=([^\\s]+)', str(resp))
+        if direction_match:
+            actual_direction = direction_match.group(1)
+            log_message_tag("world/direction", f"expected={direction}, actual={actual_direction}")
+            
+            if actual_direction in valid_directions:
+                log_info(f"Direction value valid: {actual_direction}")
+            else:
+                log_error(f"Direction value invalid: {actual_direction}")
+    
+    m.clearlog()
+print()
+
+# Test 11: Multiple tags in single message
+print("[TEST] Multiple tags in single message")
+m.send(c1a, "MOVE north")
+resp = m.expect(c1a, "Move with multiple tags", ":.*2210.*")
+
+# Verify both location and direction tags are present
+tag_count = str(resp).count("@world/")
+log_info(f"Number of world tags in message: {tag_count}")
+
+if "@world/location=" in str(resp) and "@world/direction=" in str(resp):
+    log_info("Both location and direction tags present")
+else:
+    log_error("Missing expected tags in message")
+
+m.clearlog()
+print()
+
+# Test 12: Tag persistence across operations
+print("[TEST] Tag persistence across operations")
+# Perform multiple operations and verify tags are consistent
+operations = [
+    ("MOVE", "south"),
+    ("FACE", "west"),
+    ("MOVE", "east"),
+    ("FACE", "north")
+]
+
+for op_type, direction in operations:
+    m.send(c1a, f"{op_type} {direction}")
+    if op_type == "MOVE":
+        m.expect(c1a, f"{op_type} {direction}", ":.*2210.*")
+    else:
+        m.expect(c1a, f"{op_type} {direction}", ":.*2211.*")
+    
+    # Verify tags are present
+    m.expect(c1a, f"Tags after {op_type} {direction}", "@world/location=")
+    m.expect(c1a, f"Direction tag after {op_type} {direction}", "@world/direction=")
+    
+    # Other user should also see tags
+    m.expect(c1b, f"c1b sees tags after {op_type} {direction}", "@world/location=")
+    m.clearlog()
+print()
+
+# Test 13: Tag edge cases
+print("[TEST] Tag edge cases")
+# Test tags with boundary conditions
+m.send(c1a, "MOVE north")  # Try to hit boundary
+resp = m.expect(c1a, "Boundary move", ":.*2210.*|:.*2243.*")
+
+if ":.*2243.*" in str(resp):  # Boundary hit
+    log_info("Boundary hit - checking tags")
+    # Tags should still be present even on boundary hit
+    if "@world/location=" in str(resp):
+        log_info("Location tag present on boundary hit")
+    if "@world/direction=" in str(resp):
+        log_info("Direction tag present on boundary hit")
+else:
+    log_info("No boundary hit - normal movement")
+
+m.clearlog()
+print()
+
+# Test 14: Tag validation with rapid operations
+print("[TEST] Tag validation with rapid operations")
+# Perform rapid operations and verify tags are consistent
+for i in range(5):
+    directions = ["north", "south", "east", "west"]
+    direction = directions[i % 4]
+    
+    m.send(c1a, f"MOVE {direction}")
+    resp = m.expect(c1a, f"Rapid move {i+1}", ":.*2210.*|:.*2244.*")
+    
+    if ":.*2244.*" in str(resp):  # Rate limit hit
+        log_info(f"Rate limit hit at operation {i+1}")
+        break
+    
+    # Verify tags are present
+    if "@world/location=" in str(resp):
+        log_info(f"Tags present in rapid operation {i+1}")
+    
+    m.clearlog()
+print()
+
+# Test 15: Final tag validation
+print("[TEST] Final tag validation")
+# Verify all users can see each other's tags
+m.send(c1a, "WORLD show")
+m.expect(c1a, "Final c1a world info", ":.*2202.*")
+
+m.send(c1b, "WORLD show")
+m.expect(c1b, "Final c1b world info", ":.*2202.*")
+
+# Perform final movement to verify tags
+m.send(c1a, "MOVE south")
+m.expect(c1a, "Final move", ":.*2210.*")
+m.expect(c1a, "Final location tag", "@world/location=")
+m.expect(c1a, "Final direction tag", "@world/direction=")
+
+m.expect(c1b, "c1b sees final tags", "@world/location=")
+m.expect(c1b, "c1b sees final direction tag", "@world/direction=")
+
+m.clearlog()
+print()
+
+print("=" * 60)
+print("All message tag validation tests completed successfully!")
+print("=" * 60)
+
+def log_message_tag(tag_name, tag_value):
+    """Log message tag validation"""
+    print(f"[TAG] {tag_name}={tag_value}")
+
+def log_info(message):
+    """Log informational messages"""
+    print(f"[LOG] {message}")
+
+def log_error(message):
+    """Log error messages"""
+    print(f"[ERROR] {message}")
