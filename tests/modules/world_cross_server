@@ -39,7 +39,7 @@ m.clearlog()
 print("[TEST] User on server1 joins world")
 m.send(c1a, "WORLD join")
 m.expect(c1a, "World join success", ":.*2200.*")
-m.expect(c1a, "User mode +w set", "MODE.*\\+w")
+m.expect(c1a, "User mode +y set", "MODE.*\\+y")
 m.clearlog()
 print()
 
@@ -51,7 +51,7 @@ print()
 
 # Test 3: User on server2 sees mode change
 print("[TEST] User on server2 sees mode change")
-m.expect(c2a, "c2a sees c1a mode +w", "MODE.*\\+w")
+m.expect(c2a, "c2a sees c1a mode +y", "MODE.*\\+y")
 m.clearlog()
 print()
 
@@ -82,7 +82,7 @@ print()
 print("[TEST] User on server2 joins world")
 m.send(c2a, "WORLD join")
 m.expect(c2a, "World join success", ":.*2200.*")
-m.expect(c2a, "User mode +w set", "MODE.*\\+w")
+m.expect(c2a, "User mode +y set", "MODE.*\\+y")
 m.clearlog()
 print()
 
@@ -145,7 +145,7 @@ print("[TEST] Server split handling")
 # Simulate server split by parting
 m.send(c1a, "WORLD part")
 m.expect(c1a, "World part success", ":.*2201.*")
-m.expect(c1a, "User mode +w removed", "MODE.*-w")
+m.expect(c1a, "User mode +y removed", "MODE.*-y")
 m.clearlog()
 
 # Server2 should see the part
@@ -157,7 +157,7 @@ print()
 print("[TEST] Rejoin after split")
 m.send(c1a, "WORLD join")
 m.expect(c1a, "World join success", ":.*2200.*")
-m.expect(c1a, "User mode +w set", "MODE.*\\+w")
+m.expect(c1a, "User mode +y set", "MODE.*\\+y")
 m.clearlog()
 
 # Server2 should see rejoin
@@ -227,11 +227,11 @@ m.expect(c1a, "World part success", ":.*2201.*")
 m.clearlog()
 
 # c2a should see mode change
-m.expect(c2a, "c2a sees c1a mode change", "MODE.*-w")
+m.expect(c2a, "c2a sees c1a mode change", "MODE.*-y")
 m.clearlog()
 
 # c1b should also see mode change
-m.expect(c1b, "c1b sees c1a mode change", "MODE.*-w")
+m.expect(c1b, "c1b sees c1a mode change", "MODE.*-y")
 m.clearlog()
 print()
 
