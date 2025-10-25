@@ -6,6 +6,7 @@ Tests comprehensive multi-server synchronization following _pre_test pattern
 
 import sys
 import os
+import time
 sys.path.append(os.path.dirname(__file__))
 
 from world_multiserver_utils import (
@@ -30,7 +31,7 @@ join_world_channel(m, clients, "#spawn")
 print("=" * 60)
 print("WORLD MODULE - MULTI-SERVER SYNCHRONIZATION TESTS")
 print("=" * 60)
-print(f"Test suite started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+print("Test suite started at: " + time.strftime('%Y-%m-%d %H:%M:%S'))
 print()
 
 # Test 1: User on server1 joins world
@@ -75,9 +76,9 @@ m.expect(c1a, "Face success", ":.*2211.*")
 # All other clients should see the face change
 for server_name, client in clients.items():
     if client != c1a:
-        m.expect(client, f"{server_name} sees face", "WORLD.*FACE")
-        m.expect(client, f"{server_name} sees location tag", "@world/location=")
-        m.expect(client, f"{server_name} sees direction tag", "@world/direction=")
+        m.expect(client, server_name + " sees face", "WORLD.*FACE")
+        m.expect(client, server_name + " sees location tag", "@world/location=")
+        m.expect(client, server_name + " sees direction tag", "@world/direction=")
 
 m.clearlog()
 print()
@@ -127,7 +128,7 @@ m.expect(c1a, "World part success", ":.*2201.*")
 # All other servers should see mode change
 for server_name, client in clients.items():
     if client != c1a:
-        m.expect(client, f"{server_name} sees c1a mode change", "MODE.*-y")
+        m.expect(client, server_name + " sees c1a mode change", "MODE.*-y")
 
 m.clearlog()
 print()
@@ -149,12 +150,12 @@ log_multi_client(clients, "Testing rapid movement synchronization")
 # Rapid movements on different servers
 for i in range(3):
     m.send(c1a, "MOVE north")
-    m.expect(c1a, f"Move {i+1} success", ":.*2210.*")
+    m.expect(c1a, "Move " + str(i+1) + " success", ":.*2210.*")
     
     # Other servers should see each movement
     for server_name, client in clients.items():
         if client != c1a:
-            m.expect(client, f"{server_name} sees rapid move {i+1}", "WORLD.*MOVE")
+            m.expect(client, server_name + " sees rapid move " + str(i+1), "WORLD.*MOVE")
 
 m.clearlog()
 print()
@@ -181,13 +182,13 @@ for i in range(5):
     directions = ["north", "south", "east", "west"]
     direction = directions[i % 4]
     
-    m.send(c1a, f"MOVE {direction}")
-    m.expect(c1a, f"High-volume move {i+1}", ":.*2210.*")
+    m.send(c1a, "MOVE " + direction)
+    m.expect(c1a, "High-volume move " + str(i+1), ":.*2210.*")
     
     # Verify sync to other servers
     for server_name, client in clients.items():
         if client != c1a:
-            m.expect(client, f"{server_name} sees high-volume move {i+1}", "WORLD.*MOVE")
+            m.expect(client, server_name + " sees high-volume move " + str(i+1), "WORLD.*MOVE")
 
 m.clearlog()
 print()
@@ -217,7 +218,7 @@ m.expect(c1a, "Move after disconnect test", ":.*2210.*")
 # Other users should still see the movement
 for server_name, client in clients.items():
     if client != c1a:
-        m.expect(client, f"{server_name} sees move after disconnect test", "WORLD.*MOVE")
+        m.expect(client, server_name + " sees move after disconnect test", "WORLD.*MOVE")
 
 m.clearlog()
 print()
@@ -229,7 +230,7 @@ log_multi_client(clients, "Final sync verification")
 # All users should be able to see each other
 for server_name, client in clients.items():
     m.send(client, "WORLD show")
-    m.expect(client, f"{server_name} final world info", ":.*2202.*")
+    m.expect(client, server_name + " final world info", ":.*2202.*")
 
 m.clearlog()
 print()

@@ -21,7 +21,13 @@ def setup_three_server_network():
     m.expect(c1a, "FAKEREPUTATION module loaded", ":.+ 005 .*FAKEREPUTATION")
     m.send(c1a, "OPER netadmin test")
     m.send(c1a, "CONNECT irc2.test.net")
-    m.expect(c1a, "irc1<->irc2 linked", "Link irc1.test.net -> irc2.test.net is now synced", timeout=15)
+    
+    # Handle both success and "already exists" cases
+    try:
+        m.expect(c1a, "irc1<->irc2 linked", "Link irc1.test.net -> irc2.test.net is now synced", timeout=15)
+    except:
+        # Server already linked, check for "already exists" message
+        m.expect(c1a, "irc1<->irc2 already linked", ".*already exists.*", timeout=5)
     
     # Setup server 3
     m = irctestframework.irctest.IrcTest()
@@ -31,7 +37,13 @@ def setup_three_server_network():
     m.expect(c3a, "FAKEREPUTATION module loaded", ":.+ 005 .*FAKEREPUTATION")
     m.send(c3a, "OPER netadmin test")
     m.send(c3a, "CONNECT irc2.test.net")
-    m.expect(c3a, "irc3<->irc2 linked", "Link irc3.test.net -> irc2.test.net is now synced", timeout=15)
+    
+    # Handle both success and "already exists" cases
+    try:
+        m.expect(c3a, "irc3<->irc2 linked", "Link irc3.test.net -> irc2.test.net is now synced", timeout=15)
+    except:
+        # Server already linked, check for "already exists" message
+        m.expect(c3a, "irc3<->irc2 already linked", ".*already exists.*", timeout=5)
     
     # Setup server 2
     c2a = m.new('c2a')
@@ -57,7 +69,7 @@ def verify_sync_across_servers(m, clients, action, expected_pattern, timeout=5):
     # Verify all other clients see the sync
     for server_name, client in clients.items():
         if server_name != list(clients.keys())[0]:  # Skip the one who performed action
-            m.expect(client, f"Sync verification on {server_name}", expected_pattern, timeout=timeout)
+            m.expect(client, "Sync verification on " + server_name, expected_pattern, timeout=timeout)
 
 def test_netsplit_recovery(m, clients, world_channel):
     """
@@ -69,22 +81,22 @@ def test_netsplit_recovery(m, clients, world_channel):
     """
     # Part from world channel
     primary_client = list(clients.values())[0]
-    m.send(primary_client, f"WORLD part")
+    m.send(primary_client, "WORLD part")
     m.expect(primary_client, "World part success", ":.*2201.*")
     
     # Other clients should see the part
     for server_name, client in clients.items():
         if client != primary_client:
-            m.expect(client, f"{server_name} sees part", "WORLD.*PART")
+            m.expect(client, server_name + " sees part", "WORLD.*PART")
     
     # Rejoin world channel
-    m.send(primary_client, f"WORLD join")
+    m.send(primary_client, "WORLD join")
     m.expect(primary_client, "World rejoin success", ":.*2200.*")
     
     # Other clients should see the rejoin
     for server_name, client in clients.items():
         if client != primary_client:
-            m.expect(client, f"{server_name} sees rejoin", "WORLD.*JOIN")
+            m.expect(client, server_name + " sees rejoin", "WORLD.*JOIN")
 
 def verify_message_tags_all_servers(m, clients, tags):
     """
@@ -96,24 +108,24 @@ def verify_message_tags_all_servers(m, clients, tags):
     """
     for server_name, client in clients.items():
         for tag_pattern in tags:
-            m.expect(client, f"{server_name} sees tag {tag_pattern}", tag_pattern)
+            m.expect(client, server_name + " sees tag " + tag_pattern, tag_pattern)
 
 def log_server_sync(server, action, details):
     """Log server sync events"""
-    print(f"[SYNC] {server}: {action} - {details}")
+    print("[SYNC] " + server + ": " + action + " - " + details)
 
 def log_message_tag(tag_name, tag_value):
     """Log message tag validation"""
-    print(f"[TAG] {tag_name}={tag_value}")
+    print("[TAG] " + tag_name + "=" + tag_value)
 
 def log_multi_client(clients, action):
     """Log multi-client scenarios"""
     client_names = [client.name for client in clients.values()]
-    print(f"[MULTI] Clients {client_names}: {action}")
+    print("[MULTI] Clients " + ", ".join(client_names) + ": " + action)
 
 def log_edge_case(scenario, expected, actual):
     """Log edge case results"""
-    print(f"[EDGE] {scenario}: expected={expected}, actual={actual}")
+    print("[EDGE] " + scenario + ": expected=" + str(expected) + ", actual=" + str(actual))
 
 def setup_world_capabilities(m, clients):
     """
@@ -127,9 +139,9 @@ def setup_world_capabilities(m, clients):
     
     for server_name, client in clients.items():
         m.send(client, "CAP REQ :world/features")
-        resp = m.expect(client, f"{server_name} capability response", ".*ACK.*world/features|.*NAK.*world/features")
+        resp = m.expect(client, server_name + " capability response", ".*ACK.*world/features|.*NAK.*world/features")
         if "NAK" in str(resp):
-            print(f"SKIP: World module not loaded on {server_name} - capability NAK'd")
+            print("SKIP: World module not loaded on " + server_name + " - capability NAK'd")
             all_acked = False
         m.clearlog()
     
@@ -144,7 +156,7 @@ def join_world_channel(m, clients, channel_name):
         channel_name: channel to join
     """
     for server_name, client in clients.items():
-        m.send(client, f"JOIN {channel_name}")
+        m.send(client, "JOIN " + channel_name)
         m.clearlog()
 
 def verify_world_join_sync(m, clients, joining_client):
@@ -163,8 +175,8 @@ def verify_world_join_sync(m, clients, joining_client):
     # All other clients should see the join
     for server_name, client in clients.items():
         if client != joining_client:
-            m.expect(client, f"{server_name} sees join", "WORLD.*JOIN")
-            m.expect(client, f"{server_name} sees mode +y", "MODE.*\\+y")
+            m.expect(client, server_name + " sees join", "WORLD.*JOIN")
+            m.expect(client, server_name + " sees mode +y", "MODE.*\\+y")
     
     m.clearlog()
 
@@ -178,14 +190,14 @@ def verify_movement_sync(m, clients, moving_client, direction):
         direction: direction to move (north, south, east, west)
     """
     # Send MOVE command
-    m.send(moving_client, f"MOVE {direction}")
+    m.send(moving_client, "MOVE " + direction)
     m.expect(moving_client, "Move success", ":.*2210.*")
     
     # All other clients should see the movement
     for server_name, client in clients.items():
         if client != moving_client:
-            m.expect(client, f"{server_name} sees move", "WORLD.*MOVE")
-            m.expect(client, f"{server_name} sees location tag", "@world/location=")
-            m.expect(client, f"{server_name} sees direction tag", "@world/direction=")
+            m.expect(client, server_name + " sees move", "WORLD.*MOVE")
+            m.expect(client, server_name + " sees location tag", "@world/location=")
+            m.expect(client, server_name + " sees direction tag", "@world/direction=")
     
     m.clearlog()
