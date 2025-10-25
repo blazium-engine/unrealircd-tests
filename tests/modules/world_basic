@@ -34,7 +34,7 @@ if "NAK" in str(resp):
     print("All basic tests skipped - module not available")
     exit(0)
 print(f"[LOG] World module capability confirmed - proceeding with tests")
-m.clearlog()
+
 print()
 
 # Test 2: Join world channel (created from config)
@@ -43,28 +43,28 @@ print(f"[LOG] Attempting to join #spawn channel")
 m.send(c1a, "JOIN #spawn")
 join_resp = m.expect(c1a, "Joined spawn channel", ".*JOIN.*#spawn")
 print(f"[LOG] Join response: {join_resp}")
-m.clearlog()
+
 print()
 
 # Test 3: Attempt join without capability (should fail)
 print("[TEST] Join without capability")
 m.send(c1b, "JOIN #spawn")
 m.expect(c1b, "Join denied", ".*ERR.*world.*cap")
-m.clearlog()
+
 print()
 
 # Test 4: Client b requests capability
 print("[TEST] Client b requests capability")
 m.send(c1b, "CAP REQ :world/features")
 m.expect(c1b, "Capability acknowledged", ".*ACK.*world/features")
-m.clearlog()
+
 print()
 
 # Test 5: Join world channel
 print("[TEST] Join world channel")
 m.send(c1b, "JOIN #spawn")
 m.expect(c1b, "Joins channel", "JOIN.*#spawn")
-m.clearlog()
+
 print()
 
 # Test 6: WORLD join command with JSON validation
@@ -73,7 +73,7 @@ m.send(c1a, "WORLD join")
 m.expect(c1a, "World join confirmation", ":.*2200.*")
 m.expect(c1a, "JSON data tag", "@unrealircd.org/world-data=")
 m.expect(c1a, "User mode +y set", "MODE.*\\+y")
-m.clearlog()
+
 print()
 
 # Test 7: MOVE command with message tags
@@ -81,7 +81,7 @@ print("[TEST] MOVE command with tags")
 m.send(c1a, "MOVE north")
 m.expect(c1a, "Move confirmation", ":.*2210.*")
 m.expect(c1a, "JSON data tag", "@unrealircd.org/world-data=")
-m.clearlog()
+
 print()
 
 # Test 8: FACE command
@@ -89,7 +89,7 @@ print("[TEST] FACE command")
 m.send(c1a, "FACE east")
 m.expect(c1a, "Face confirmation", ":.*2211.*")
 m.expect(c1a, "JSON data tag", "@unrealircd.org/world-data=")
-m.clearlog()
+
 print()
 
 # Test 9: WORLD show info with JSON validation
@@ -97,7 +97,7 @@ print("[TEST] WORLD show info with JSON")
 m.send(c1a, "WORLD show")
 m.expect(c1a, "World info received", ":.*2202.*")
 m.expect(c1a, "JSON data tag", "@unrealircd.org/world-data=")
-m.clearlog()
+
 print()
 
 # Test 10: Multiple users in world
@@ -106,7 +106,7 @@ m.send(c1b, "WORLD join")
 m.expect(c1b, "c1b world join", ":.*2200.*")
 m.expect(c1b, "c1b user mode +y", "MODE.*\\+y")
 m.expect(c1a, "c1a sees c1b join broadcast", "WORLD.*JOIN")
-m.clearlog()
+
 print()
 
 # Test 11: WORLD part command
@@ -114,7 +114,7 @@ print("[TEST] WORLD part command")
 m.send(c1a, "WORLD part")
 m.expect(c1a, "World part confirmation", ":.*2201.*")
 m.expect(c1a, "User mode +y removed", "MODE.*-y")
-m.clearlog()
+
 print()
 
 # Test 12: Rejoin world preserves position
@@ -122,7 +122,7 @@ print("[TEST] Rejoin world")
 m.send(c1a, "WORLD join")
 m.expect(c1a, "World join confirmation", ":.*2200.*")
 m.expect(c1a, "User mode +y set", "MODE.*\\+y")
-m.clearlog()
+
 print()
 
 print("All basic tests completed successfully!")
