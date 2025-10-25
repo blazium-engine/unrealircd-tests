@@ -1,0 +1,2 @@
+# This file ensures the chess-logs directory is tracked in git
+# Chess game logs in PGN format will be created here during tests

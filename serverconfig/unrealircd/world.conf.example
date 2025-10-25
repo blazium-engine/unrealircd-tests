@@ -1,0 +1,29 @@
+/*
+ * UnrealIRCd World Module Configuration Example
+ * Place this in your unrealircd.conf or include it
+ */
+
+world {
+    /* Path to worlds.json configuration file */
+    config-file "conf/worlds.json";
+    
+    /* Directory for storing user world data */
+    user-data-dir "data/world/users";
+    
+    /* Auto-save interval in seconds (default: 1800 = 30 minutes) */
+    autosave-interval 1800;
+    
+    /* Move rate limit (moves per second, default: 2) */
+    move-rate-limit 2;
+    
+    /* Command rate limit (commands per second, default: 5) */
+    command-rate-limit 5;
+};
+
+/*
+ * To create a world-enabled channel:
+ * 1. Create a channel: /MODE #spawn +i
+ * 2. Set world mode: /MODE #spawn +W spawn
+ *    (where "spawn" is the world_id from worlds.json)
+ * 3. Users can now join the world
+ */

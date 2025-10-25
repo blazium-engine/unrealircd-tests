@@ -1,0 +1,2 @@
+# This file ensures the users directory is tracked in git
+# User world data files will be created here during tests

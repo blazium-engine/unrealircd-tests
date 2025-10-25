@@ -1,0 +1,66 @@
+{
+  "worlds": {
+    "spawn": {
+      "width": 10,
+      "height": 10,
+      "respawn": {
+        "x": 5,
+        "y": 5,
+        "direction": "north"
+      },
+      "exits": [
+        {
+          "x": 9,
+          "y": 5,
+          "target_world": "forest",
+          "target_entrance": "spawn_exit"
+        }
+      ],
+      "entrances": [
+        {
+          "id": "from_forest",
+          "x": 1,
+          "y": 5,
+          "direction": "west"
+        }
+      ]
+    },
+    "forest": {
+      "width": 15,
+      "height": 15,
+      "respawn": {
+        "x": 7,
+        "y": 7,
+        "direction": "south"
+      },
+      "exits": [
+        {
+          "x": 1,
+          "y": 7,
+          "target_world": "spawn",
+          "target_entrance": "from_forest"
+        }
+      ],
+      "entrances": [
+        {
+          "id": "spawn_exit",
+          "x": 14,
+          "y": 7,
+          "direction": "east"
+        }
+      ]
+    },
+    "test": {
+      "width": 5,
+      "height": 5,
+      "respawn": {
+        "x": 2,
+        "y": 2,
+        "direction": "north"
+      },
+      "exits": [],
+      "entrances": []
+    }
+  },
+  "start_world": "spawn"
+}
