@@ -17,9 +17,14 @@ m.connect()
 print("[TEST] Min players (2)")
 m.send(c1a, "HANGMAN CREATE 2 30")
 m.expect(c1a, "c1a creates min player lobby", ":.*2500.*")
+invite_line = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_code = invite_line.split()[-1] if invite_line else None
 m.clearlog()
 
-m.send(c1b, "HANGMAN JOIN ABC12345")
+if invite_code:
+    m.send(c1b, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
 m.expect(c1b, "c1b joins min lobby", ":.*2503.*")
 m.clearlog()
 

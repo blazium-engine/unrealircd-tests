@@ -17,15 +17,19 @@ m.connect()
 print("[TEST] Lobby creation")
 m.send(c1a, "HANGMAN CREATE 6 50")
 m.expect(c1a, "c1a gets lobby created", ":.*2500.*")
-m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_line = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_code = invite_line.split()[-1] if invite_line else None
 m.expect(c1a, "c1a gets hangman player mode +h", "MODE.*\\+h")
 m.clearlog()
 print()
 
 # Test 2: Join lobby with invite code
 print("[TEST] Join lobby with invite code")
-# Extract invite code from previous test (simplified - in real test would parse)
-m.send(c1b, "HANGMAN JOIN ABC12345")
+# Use the actual invite code from the 2505 response
+if invite_code:
+    m.send(c1b, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
 m.expect(c1b, "c1b joins lobby", ":.*2503.*")
 m.expect(c1b, "c1b gets hangman player mode +h", "MODE.*\\+h")
 m.expect(c1a, "c1a sees c1b joined", ".*joined the lobby")
@@ -34,7 +38,10 @@ print()
 
 # Test 3: Third player joins
 print("[TEST] Third player joins")
-m.send(c1c, "HANGMAN JOIN ABC12345")
+if invite_code:
+    m.send(c1c, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1c, "HANGMAN JOIN ABC12345")
 m.expect(c1c, "c1c joins lobby", ":.*2503.*")
 m.expect(c1c, "c1c gets hangman player mode +h", "MODE.*\\+h")
 m.expect(c1a, "c1a sees c1c joined", ".*joined the lobby")

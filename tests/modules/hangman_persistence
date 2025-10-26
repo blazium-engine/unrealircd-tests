@@ -16,13 +16,18 @@ m.connect()
 print("[TEST] Lobby state save called")
 m.send(c1a, "HANGMAN CREATE 3 50")
 m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+invite_line = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_code = invite_line.split()[-1] if invite_line else None
 # Would check persistence logs for lobby save
 m.clearlog()
 print()
 
 # Test 2: Lobby state load called
 print("[TEST] Lobby state load called")
-m.send(c1b, "HANGMAN JOIN ABC12345")
+if invite_code:
+    m.send(c1b, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
 m.expect(c1b, "c1b joins lobby", ":.*2503.*")
 # Would check persistence logs for lobby load
 m.clearlog()
