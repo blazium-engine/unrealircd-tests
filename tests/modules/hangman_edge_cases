@@ -13,8 +13,8 @@ c1b = m.new('c1b')
 c1c = m.new('c1c')
 m.connect()
 
-# Test 1: Single letter word
-print("[TEST] Single letter word")
+# Test 1: Min length word (3 characters)
+print("[TEST] Min length word (3 characters)")
 m.send(c1a, "HANGMAN CREATE 3 50")
 m.expect(c1a, "c1a creates lobby", ":.*2500.*")
 invite_line = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
@@ -39,9 +39,9 @@ m.send(c1a, "HANGMAN START")
 m.expect(c1a, "c1a starts game", ":.*2510.*")
 m.clearlog()
 
-m.send(c1a, "HANGMANWORD A")
-m.expect(c1a, "c1a sets single letter word", ":.*2512.*")
-m.expect(c1a, "c1a sees single letter display", ":.*2513.*")
+m.send(c1a, "HANGMANWORD ABC")
+m.expect(c1a, "c1a sets min length word", ":.*2512.*")
+m.expect(c1a, "c1a sees min length display", ":.*2513.*")
 m.clearlog()
 print()
 
