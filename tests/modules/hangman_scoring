@@ -93,15 +93,16 @@ m.clearlog()
 print()
 
 # Test 6: Point limit game end
+# After previous round, dealer rotated to c1c
 print("[TEST] Point limit game end")
 # Set word that will give enough points to reach limit
-m.send(c1a, "HANGMANWORD ELEPHANT")
-m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.send(c1c, "HANGMANWORD ELEPHANT")
+m.expect(c1c, "c1c sets word", ":.*2512.*")
 m.clearlog()
 
-# Guess word to get points
-m.send(c1b, "HANGMANGUESS ELEPHANT")
-m.expect(c1b, "c1b guesses word", ":.*2522.*")
+# Guess word to get points - c1c is dealer, so c1a or c1b must guess
+m.send(c1a, "HANGMANGUESS ELEPHANT")
+m.expect(c1a, "c1a guesses word", ":.*2522.*")
 # Should trigger game end if point limit reached
 m.clearlog()
 print()
