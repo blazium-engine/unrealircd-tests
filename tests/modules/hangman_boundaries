@@ -71,13 +71,17 @@ m.expect(c1a, "c1a sets min length word", ":.*2512.*")
 m.expect(c1a, "c1a sees min length display", ":.*2513.*")
 m.clearlog()
 
-# End the round so we can set another word
-m.send(c1a, "HANGMAN SKIP")
+# End the round by having guesser correctly guess the word
+m.send(c1b, "HANGMANGUESS ABC")
+m.expect(c1b, "c1b guesses the word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
 # Test 4: Max word length (20)
-# After SKIP, dealer rotates to c1b
+# After guesser wins, dealer rotates to c1b
 print("[TEST] Max word length (20)")
 m.send(c1b, "HANGMANWORD ABCDEFGHIJKLMNOPQRST")
 m.expect(c1b, "c1b sets max length word", ":.*2512.*")
