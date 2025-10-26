@@ -17,6 +17,8 @@ m.connect()
 print("[TEST] RPL_HANGMANLOBBYCREATED (2500)")
 m.send(c1a, "HANGMAN CREATE 4 30")
 m.expect(c1a, "c1a gets lobby created", ":.*2500.*")
+invite_line = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_code = invite_line.split()[-1] if invite_line else None
 m.clearlog()
 print()
 
@@ -36,7 +38,10 @@ print()
 
 # Test 4: RPL_HANGMANJOINED (2503)
 print("[TEST] RPL_HANGMANJOINED (2503)")
-m.send(c1b, "HANGMAN JOIN ABC12345")
+if invite_code:
+    m.send(c1b, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
 m.expect(c1b, "c1b gets joined", ":.*2503.*")
 m.clearlog()
 print()

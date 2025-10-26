@@ -18,7 +18,8 @@ m.connect()
 print("[TEST] Invite code generation")
 m.send(c1a, "HANGMAN CREATE 4 30")
 m.expect(c1a, "c1a gets lobby created", ":.*2500.*")
-m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_line = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_code = invite_line.split()[-1] if invite_line else None
 m.clearlog()
 print()
 
@@ -53,7 +54,10 @@ print()
 
 # Test 6: Join with password
 print("[TEST] Join with password")
-m.send(c1b, "HANGMAN JOIN ABC12345 secret123")
+if invite_code:
+    m.send(c1b, f"HANGMAN JOIN {invite_code} secret123")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345 secret123")
 m.expect(c1b, "c1b joins with password", ":.*2503.*")
 m.expect(c1a, "c1a sees c1b joined", ".*joined the lobby")
 m.clearlog()
@@ -61,7 +65,10 @@ print()
 
 # Test 7: Join password-protected sealed lobby
 print("[TEST] Join password-protected sealed lobby")
-m.send(c1c, "HANGMAN JOIN ABC12345 secret123")
+if invite_code:
+    m.send(c1c, f"HANGMAN JOIN {invite_code} secret123")
+else:
+    m.send(c1c, "HANGMAN JOIN ABC12345 secret123")
 m.expect(c1c, "c1c joins sealed lobby", ":.*2503.*")
 m.expect(c1a, "c1a sees c1c joined", ".*joined the lobby")
 m.clearlog()
@@ -85,7 +92,8 @@ print()
 # Test 10: Spectator join and viewing
 print("[TEST] Spectator join")
 # Create a spectator by having c1d join the channel directly
-m.send(c1d, "JOIN #hangman-ABC12345")
+channel_name = f"#hangman-{invite_code}" if invite_code else "#hangman-ABC12345"
+m.send(c1d, f"JOIN {channel_name}")
 m.expect(c1d, "c1d joins as spectator", "JOIN.*#hangman-")
 m.expect(c1d, "c1d gets spectator notice", "You joined as a spectator")
 m.clearlog()
@@ -108,7 +116,10 @@ m.expect(c1a, "c1a creates lobby", ":.*2500.*")
 m.clearlog()
 
 # Try to join with third player (should fail)
-m.send(c1c, "HANGMAN JOIN ABC12345")
+if invite_code:
+    m.send(c1c, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1c, "HANGMAN JOIN ABC12345")
 m.expect(c1c, "c1c gets lobby full error", ":.*2549.*")
 m.clearlog()
 print()

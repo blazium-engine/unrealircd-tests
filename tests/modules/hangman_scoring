@@ -17,13 +17,21 @@ m.connect()
 print("[TEST] Letter occurrence scoring")
 m.send(c1a, "HANGMAN CREATE 3 50")
 m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+invite_line = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_code = invite_line.split()[-1] if invite_line else None
 m.clearlog()
 
-m.send(c1b, "HANGMAN JOIN ABC12345")
+if invite_code:
+    m.send(c1b, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
 m.expect(c1b, "c1b joins lobby", ":.*2503.*")
 m.clearlog()
 
-m.send(c1c, "HANGMAN JOIN ABC12345")
+if invite_code:
+    m.send(c1c, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1c, "HANGMAN JOIN ABC12345")
 m.expect(c1c, "c1c joins lobby", ":.*2503.*")
 m.clearlog()
 

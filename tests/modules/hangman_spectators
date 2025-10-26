@@ -18,18 +18,27 @@ m.connect()
 print("[TEST] Spectator join channel")
 m.send(c1a, "HANGMAN CREATE 3 50")
 m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+invite_line = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_code = invite_line.split()[-1] if invite_line else None
 m.clearlog()
 
-m.send(c1b, "HANGMAN JOIN ABC12345")
+if invite_code:
+    m.send(c1b, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
 m.expect(c1b, "c1b joins lobby", ":.*2503.*")
 m.clearlog()
 
-m.send(c1c, "HANGMAN JOIN ABC12345")
+if invite_code:
+    m.send(c1c, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1c, "HANGMAN JOIN ABC12345")
 m.expect(c1c, "c1c joins lobby", ":.*2503.*")
 m.clearlog()
 
 # Spectator joins channel directly
-m.send(c1d, "JOIN #hangman-ABC12345")
+channel_name = f"#hangman-{invite_code}" if invite_code else "#hangman-ABC12345"
+m.send(c1d, f"JOIN {channel_name}")
 m.expect(c1d, "c1d joins as spectator", "JOIN.*#hangman-")
 m.expect(c1d, "c1d gets spectator notice", "You joined as a spectator")
 m.clearlog()
