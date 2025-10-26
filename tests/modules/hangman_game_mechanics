@@ -42,6 +42,10 @@ m.clearlog()
 m.send(c1a, "HANGMANWORD VALIDWORD")
 m.expect(c1a, "c1a sets valid word", ":.*2512.*")
 m.clearlog()
+
+# Skip to next round
+m.send(c1a, "HANGMAN SKIP")
+m.clearlog()
 print()
 
 # Test 2: Word with spaces handling
@@ -49,6 +53,10 @@ print("[TEST] Word with spaces")
 m.send(c1a, "HANGMANWORD HELLO WORLD")
 m.expect(c1a, "c1a sets word with spaces", ":.*2512.*")
 m.expect(c1a, "c1a sees display with spaces", ":.*2513.*")
+m.clearlog()
+
+# Skip to next round
+m.send(c1a, "HANGMAN SKIP")
 m.clearlog()
 print()
 

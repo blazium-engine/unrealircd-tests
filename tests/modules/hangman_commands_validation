@@ -26,11 +26,11 @@ print()
 # Test 2: CREATE with invalid point_limit
 print("[TEST] CREATE with invalid point_limit")
 m.send(c1a, "HANGMAN CREATE 4 -1")
-m.expect(c1a, "c1a gets invalid point limit error", ":.*2542.*")
+m.expect(c1a, "c1a gets invalid point limit error", ":.*2556.*")
 m.clearlog()
 
 m.send(c1a, "HANGMAN CREATE 4 1001")
-m.expect(c1a, "c1a gets invalid point limit error", ":.*2542.*")
+m.expect(c1a, "c1a gets invalid point limit error", ":.*2556.*")
 m.clearlog()
 print()
 
