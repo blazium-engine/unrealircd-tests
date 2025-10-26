@@ -15,11 +15,11 @@ m.connect()
 # Test 1: CREATE with invalid max_players
 print("[TEST] CREATE with invalid max_players")
 m.send(c1a, "HANGMAN CREATE 1 30")
-m.expect(c1a, "c1a gets invalid max players error", ":.*2541.*")
+m.expect(c1a, "c1a gets invalid max players error", ":.*2555.*")
 m.clearlog()
 
 m.send(c1a, "HANGMAN CREATE 11 30")
-m.expect(c1a, "c1a gets invalid max players error", ":.*2541.*")
+m.expect(c1a, "c1a gets invalid max players error", ":.*2555.*")
 m.clearlog()
 print()
 

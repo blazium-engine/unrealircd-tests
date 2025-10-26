@@ -33,6 +33,10 @@ m.expect(c1a, "c1a starts min player game", ":.*2510.*")
 m.clearlog()
 print()
 
+# Leave the current lobby before creating new one
+m.send(c1a, "HANGMAN LEAVE")
+m.clearlog()
+
 # Test 2: Max players (10)
 print("[TEST] Max players (10)")
 m.send(c1a, "HANGMAN CREATE 10 30")

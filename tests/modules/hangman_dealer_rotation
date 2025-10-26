@@ -37,7 +37,6 @@ m.clearlog()
 
 m.send(c1a, "HANGMAN START")
 m.expect(c1a, "c1a starts game", ":.*2510.*")
-# First dealer should be randomly selected
 m.clearlog()
 print()
 
