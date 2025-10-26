@@ -72,15 +72,16 @@ print()
 
 # Test 4: Full word guess bonus (2x length)
 print("[TEST] Full word guess bonus")
-# Start new round
-m.send(c1a, "HANGMANWORD TIGER")
-m.expect(c1a, "c1a sets word", ":.*2512.*")
+# After round end, dealer rotated to c1b
+# Start new round with c1b as dealer
+m.send(c1b, "HANGMANWORD TIGER")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
 m.clearlog()
 
-# Guess full word (5 letters * 2 = 10 points)
-m.send(c1b, "HANGMANGUESS TIGER")
-m.expect(c1b, "c1b guesses word", ":.*2522.*")
-m.expect(c1b, "c1b earns word bonus", ".*earned 10 points")
+# Guess full word (5 letters * 2 = 10 points) - c1b is dealer, so c1a or c1c must guess
+m.send(c1a, "HANGMANGUESS TIGER")
+m.expect(c1a, "c1a guesses word", ":.*2522.*")
+m.expect(c1a, "c1a earns word bonus", ".*earned 10 points")
 m.clearlog()
 print()
 

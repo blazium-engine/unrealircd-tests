@@ -39,9 +39,8 @@ m.send(c1a, "HANGMAN START")
 m.expect(c1a, "c1a starts game", ":.*2510.*")
 m.clearlog()
 
-# Start word setting phase
-m.send(c1a, "HANGMANWORD")
-m.expect(c1a, "c1a starts word setting", "Word setting phase started")
+# Word setting phase has already started after HANGMAN START
+# The game is in word_setting phase by default
 # Would test 180s timeout (simplified for test)
 m.clearlog()
 print()

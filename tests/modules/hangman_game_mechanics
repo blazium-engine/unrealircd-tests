@@ -75,12 +75,13 @@ print()
 
 # Test 4: Already guessed letter rejection
 print("[TEST] Already guessed letter")
-m.send(c1b, "HANGMANGUESS H")
-m.expect(c1b, "c1b guesses H", ":.*2520.*")
+# 'H' is incorrect in "TESTING", but we'll guess T (correct) first
+m.send(c1b, "HANGMANGUESS T")
+m.expect(c1b, "c1b guesses T correctly", ":.*2520.*")
 m.clearlog()
 
-# c1a guesses the same letter (c1a is not dealer, c1c is dealer)
-m.send(c1a, "HANGMANGUESS H")
+# c1a guesses the same letter (T) - should get already guessed error
+m.send(c1a, "HANGMANGUESS T")
 m.expect(c1a, "c1a gets already guessed error", ":.*2544.*")
 m.clearlog()
 print()

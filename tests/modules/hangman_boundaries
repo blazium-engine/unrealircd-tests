@@ -77,18 +77,20 @@ m.clearlog()
 print()
 
 # Test 4: Max word length (20)
+# After SKIP, dealer rotates to c1b
 print("[TEST] Max word length (20)")
-m.send(c1a, "HANGMANWORD ABCDEFGHIJKLMNOPQRST")
-m.expect(c1a, "c1a sets max length word", ":.*2512.*")
-m.expect(c1a, "c1a sees max length display", ":.*2513.*")
+m.send(c1b, "HANGMANWORD ABCDEFGHIJKLMNOPQRST")
+m.expect(c1b, "c1b sets max length word", ":.*2512.*")
+m.expect(c1b, "c1b sees max length display", ":.*2513.*")
 m.clearlog()
 print()
 
 # Test 5: Min timeout (30s) via config
 print("[TEST] Min timeout (30s)")
 # This would test configuration limits
-m.send(c1a, "HANGMANWORD TIMEOUTTEST")
-m.expect(c1a, "c1a sets word", ":.*2512.*")
+# c1b is still the dealer
+m.send(c1b, "HANGMANWORD TIMEOUTTEST")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
 # Would test 30s timeout behavior
 m.clearlog()
 print()
@@ -96,8 +98,9 @@ print()
 # Test 6: Max timeout (600s) via config
 print("[TEST] Max timeout (600s)")
 # This would test configuration limits
-m.send(c1a, "HANGMANWORD MAXTIMEOUT")
-m.expect(c1a, "c1a sets word", ":.*2512.*")
+# c1b is still the dealer
+m.send(c1b, "HANGMANWORD MAXTIMEOUT")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
 # Would test 600s timeout behavior
 m.clearlog()
 print()
@@ -105,8 +108,9 @@ print()
 # Test 7: Min health (1) via config
 print("[TEST] Min health (1)")
 # This would test configuration limits
-m.send(c1a, "HANGMANWORD MINHEALTH")
-m.expect(c1a, "c1a sets word", ":.*2512.*")
+# c1b is still the dealer
+m.send(c1b, "HANGMANWORD MINHEALTH")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
 # Would test min health behavior
 m.clearlog()
 print()
@@ -114,8 +118,9 @@ print()
 # Test 8: Max health (20) via config
 print("[TEST] Max health (20)")
 # This would test configuration limits
-m.send(c1a, "HANGMANWORD MAXHEALTH")
-m.expect(c1a, "c1a sets word", ":.*2512.*")
+# c1b is still the dealer
+m.send(c1b, "HANGMANWORD MAXHEALTH")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
 # Would test max health behavior
 m.clearlog()
 print()

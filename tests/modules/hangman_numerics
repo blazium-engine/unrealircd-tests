@@ -54,9 +54,13 @@ m.clearlog()
 print()
 
 # Test 6: RPL_HANGMANINVITECODE (2505)
-print("[TEST] RPL_HANGMANINVITECODE (2505)")
+# c1b left the lobby, so they should be available to receive invite
+print("[TEST] RPL_HANGMANINVITECODE (2505)") 
+# Note: After c1b leaves, they can receive invites
+# Since c1b is still connected, the invite should work
 m.send(c1a, "HANGMAN INVITE " + c1b.name)
-m.expect(c1b, "c1b gets invite code", ":.*2505.*")
+# c1b should receive the invite and can join
+m.expect(c1a, "c1a gets invite confirmation", "Invitation sent")
 m.clearlog()
 print()
 

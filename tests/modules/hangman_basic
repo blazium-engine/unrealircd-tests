@@ -109,12 +109,14 @@ m.clearlog()
 print()
 
 # Test 9: Dealer rotation
+# After Round 1, dealer rotates to c1b
 print("[TEST] Dealer rotation")
-m.send(c1a, "HANGMANWORD TIGER")
-m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.send(c1b, "HANGMANWORD TIGER")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
 m.clearlog()
-m.send(c1b, "HANGMANGUESS TIGER")
-m.expect(c1b, "c1b guesses word", ":.*2522.*")
+# c1b is dealer, so c1a or c1c must guess
+m.send(c1a, "HANGMANGUESS TIGER")
+m.expect(c1a, "c1a guesses word", ":.*2522.*")
 m.expect(c1a, "c1a sees round end", ":.*2517.*")
 m.expect(c1b, "c1b sees round end", ":.*2517.*")
 m.expect(c1c, "c1c sees round end", ":.*2517.*")

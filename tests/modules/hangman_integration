@@ -81,7 +81,10 @@ print()
 
 # Test 2: 5 players, multiple rounds
 print("[TEST] 5 players, multiple rounds")
-m.send(c1e, "HANGMAN JOIN ABC12345")
+if invite_code:
+    m.send(c1e, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1e, "HANGMAN JOIN ABC12345")
 m.expect(c1e, "c1e joins lobby", ":.*2503.*")
 m.clearlog()
 
