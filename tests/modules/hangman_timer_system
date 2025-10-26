@@ -51,8 +51,8 @@ m.send(c1a, "HANGMANWORD TIMEOUTTEST")
 m.expect(c1a, "c1a sets word", ":.*2512.*")
 m.clearlog()
 
-# Start guessing phase
-m.send(c1b, "HANGMANGUESS A")
+# Start guessing phase - guess 'E' which is in TIMEOUTTEST
+m.send(c1b, "HANGMANGUESS E")
 m.expect(c1b, "c1b makes guess", ":.*2520.*")
 # Would test 180s timeout (simplified for test)
 m.clearlog()
