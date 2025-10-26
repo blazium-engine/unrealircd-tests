@@ -56,27 +56,37 @@ m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
-# Test 3: Dealer cannot guess
-print("[TEST] Dealer cannot guess")
-# Current dealer tries to guess
-m.send(c1a, "HANGMANGUESS A")
-m.expect(c1a, "c1a gets dealer cannot guess error", ":.*2542.*")
+# Test 3: Dealer rotation happened (c1b is now dealer)
+print("[TEST] Dealer rotation verification")
+# After rotation, c1b should now be dealer
+m.send(c1b, "HANGMANWORD ROTATION")
+m.expect(c1b, "c1b sets word as new dealer", ":.*2512.*")
 m.clearlog()
 print()
 
-# Test 4: Only dealer can set word
-print("[TEST] Only dealer can set word")
-# Non-dealer tries to set word
-m.send(c1b, "HANGMANWORD NOTDEALER")
-m.expect(c1b, "c1b gets not dealer error", ":.*2541.*")
+# Test 4: Previous dealer cannot set word
+print("[TEST] Previous dealer cannot set word")
+# c1a is no longer dealer, should get error
+m.send(c1a, "HANGMANWORD NOTDEALER")
+m.expect(c1a, "c1a gets not dealer error", ":.*2541.*")
+m.clearlog()
+print()
+
+# End the round from Test 3 first (guess the word)
+m.send(c1a, "HANGMANGUESS ROTATION")
+m.expect(c1a, "c1a guesses the word", ":.*2522.*")
 m.clearlog()
 print()
 
 # Test 5: Dealer skip loses round
 print("[TEST] Dealer skip loses round")
+# c1c should be dealer now (after rotation)
+m.send(c1c, "HANGMANWORD SKIPTEST")
+m.expect(c1c, "c1c sets word as dealer", ":.*2512.*")
+m.clearlog()
 # Dealer skips their turn
-m.send(c1a, "HANGMAN SKIP")
-m.expect(c1a, "c1a skips turn", "Dealer skipped their turn")
+m.send(c1c, "HANGMAN SKIP")
+m.expect(c1c, "c1c skips turn", "Dealer skipped their turn")
 m.expect(c1a, "c1a sees round end", ":.*2517.*")
 m.expect(c1b, "c1b sees round end", ":.*2517.*")
 m.expect(c1c, "c1c sees round end", ":.*2517.*")
@@ -86,7 +96,7 @@ print()
 
 # Test 6: Dealer disconnect during word setting
 print("[TEST] Dealer disconnect during word setting")
-# Start new round
+# Start new round (c1a should be dealer after rotation)
 m.send(c1a, "HANGMANWORD NEWWORD")
 m.expect(c1a, "c1a sets word", ":.*2512.*")
 m.clearlog()
