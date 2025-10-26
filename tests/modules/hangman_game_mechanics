@@ -43,27 +43,33 @@ m.send(c1a, "HANGMANWORD VALIDWORD")
 m.expect(c1a, "c1a sets valid word", ":.*2512.*")
 m.clearlog()
 
-# Skip to next round
+# Skip to next round (dealer rotates to c1b)
 m.send(c1a, "HANGMAN SKIP")
 m.clearlog()
 print()
 
 # Test 2: Word with spaces handling
+# Note: After rotation, c1b is now the dealer
 print("[TEST] Word with spaces")
-m.send(c1a, "HANGMANWORD HELLO WORLD")
-m.expect(c1a, "c1a sets word with spaces", ":.*2512.*")
+m.send(c1b, "HANGMANWORD HELLO WORLD")
+m.expect(c1b, "c1b sets word with spaces", ":.*2512.*")
 m.expect(c1a, "c1a sees display with spaces", ":.*2513.*")
 m.clearlog()
 
-# Skip to next round
-m.send(c1a, "HANGMAN SKIP")
+# Skip to next round (dealer rotates to c1c)
+m.send(c1b, "HANGMAN SKIP")
 m.clearlog()
 print()
 
 # Test 3: Word reuse prevention
+# After rotation, c1c is now the dealer
 print("[TEST] Word reuse prevention")
-m.send(c1a, "HANGMANWORD HELLO WORLD")
-m.expect(c1a, "c1a gets word reuse error", ":.*2543.*")
+m.send(c1c, "HANGMANWORD HELLO WORLD")
+m.expect(c1c, "c1c gets word reuse error", ":.*2543.*")
+
+# Set a different word for next tests
+m.send(c1c, "HANGMANWORD TESTING")
+m.expect(c1c, "c1c sets word", ":.*2512.*")
 m.clearlog()
 print()
 
@@ -73,8 +79,9 @@ m.send(c1b, "HANGMANGUESS H")
 m.expect(c1b, "c1b guesses H", ":.*2520.*")
 m.clearlog()
 
-m.send(c1c, "HANGMANGUESS H")
-m.expect(c1c, "c1c gets already guessed error", ":.*2544.*")
+# c1a guesses the same letter (c1a is not dealer, c1c is dealer)
+m.send(c1a, "HANGMANGUESS H")
+m.expect(c1a, "c1a gets already guessed error", ":.*2544.*")
 m.clearlog()
 print()
 
@@ -103,15 +110,17 @@ print()
 
 # Test 8: Health decrease on wrong guess
 print("[TEST] Health decrease on wrong guess")
-m.send(c1c, "HANGMANGUESS Z")
-m.expect(c1c, "c1c gets wrong guess", ":.*2521.*")
+# c1a guesses wrong (c1c is dealer, can't guess)
+m.send(c1a, "HANGMANGUESS Z")
+m.expect(c1a, "c1a gets wrong guess", ":.*2521.*")
 m.expect(c1a, "c1a sees health decrease", ":.*2514.*")
 m.clearlog()
 print()
 
 # Test 9: Complete word reveal
 print("[TEST] Complete word reveal")
-m.send(c1b, "HANGMANGUESS HELLO WORLD")
+# Guess the complete word "TESTING" (not "HELLO WORLD" from earlier test)
+m.send(c1b, "HANGMANGUESS TESTING")
 m.expect(c1b, "c1b guesses complete word", ":.*2522.*")
 m.expect(c1a, "c1a sees word revealed", ":.*2513.*")
 m.clearlog()
@@ -130,17 +139,18 @@ m.clearlog()
 print()
 
 # Test 11: Timeout handling (word setting phase)
+# Note: After skip in Test 10, c1b is now dealer
 print("[TEST] Word setting timeout")
-m.send(c1a, "HANGMANWORD")
-m.expect(c1a, "c1a starts word setting", "Word setting phase started")
+m.send(c1b, "HANGMANWORD")
+m.expect(c1b, "c1b gets missing word error", ":.*2543.*")
 # Wait for timeout (simplified test - in real test would wait)
 m.clearlog()
 print()
 
 # Test 12: Timeout handling (guessing phase)
 print("[TEST] Guessing timeout")
-m.send(c1a, "HANGMANWORD TESTWORD")
-m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.send(c1b, "HANGMANWORD TESTWORD")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
 # Wait for timeout (simplified test - in real test would wait)
 m.clearlog()
 print()
@@ -148,8 +158,8 @@ print()
 # Test 13: Timer warnings (60s, 30s, 10s)
 print("[TEST] Timer warnings")
 # This would be tested with actual timer simulation
-m.send(c1a, "HANGMANWORD WARNINGTEST")
-m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.send(c1b, "HANGMANWORD WARNINGTEST")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
 m.clearlog()
 print()
 

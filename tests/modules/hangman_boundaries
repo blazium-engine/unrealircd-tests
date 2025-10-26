@@ -70,6 +70,10 @@ m.send(c1a, "HANGMANWORD ABC")
 m.expect(c1a, "c1a sets min length word", ":.*2512.*")
 m.expect(c1a, "c1a sees min length display", ":.*2513.*")
 m.clearlog()
+
+# End the round so we can set another word
+m.send(c1a, "HANGMAN SKIP")
+m.clearlog()
 print()
 
 # Test 4: Max word length (20)
