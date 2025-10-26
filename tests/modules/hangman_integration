@@ -81,11 +81,46 @@ print()
 
 # Test 2: 5 players, multiple rounds
 print("[TEST] 5 players, multiple rounds")
-if invite_code:
-    m.send(c1e, f"HANGMAN JOIN {invite_code}")
+# Create new lobby with 5 players
+m.send(c1a, "HANGMAN CREATE 5 50")
+m.expect(c1a, "c1a creates new lobby", ":.*2500.*")
+invite_line2 = m.expect(c1a, "c1a gets new invite code", ":.*2505.*")
+invite_code2 = invite_line2.split()[-1] if invite_line2 else None
+m.clearlog()
+
+if invite_code2:
+    m.send(c1a, f"HANGMAN JOIN {invite_code2}")
+else:
+    m.send(c1a, "HANGMAN JOIN ABC12345")
+m.expect(c1a, "c1a joins new lobby", ":.*2503.*")
+m.clearlog()
+
+if invite_code2:
+    m.send(c1b, f"HANGMAN JOIN {invite_code2}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins new lobby", ":.*2503.*")
+m.clearlog()
+
+if invite_code2:
+    m.send(c1c, f"HANGMAN JOIN {invite_code2}")
+else:
+    m.send(c1c, "HANGMAN JOIN ABC12345")
+m.expect(c1c, "c1c joins new lobby", ":.*2503.*")
+m.clearlog()
+
+if invite_code2:
+    m.send(c1d, f"HANGMAN JOIN {invite_code2}")
+else:
+    m.send(c1d, "HANGMAN JOIN ABC12345")
+m.expect(c1d, "c1d joins new lobby", ":.*2503.*")
+m.clearlog()
+
+if invite_code2:
+    m.send(c1e, f"HANGMAN JOIN {invite_code2}")
 else:
     m.send(c1e, "HANGMAN JOIN ABC12345")
-m.expect(c1e, "c1e joins lobby", ":.*2503.*")
+m.expect(c1e, "c1e joins new lobby", ":.*2503.*")
 m.clearlog()
 
 # Continue with 5 players

@@ -76,7 +76,7 @@ print()
 
 # Test 8: INVITE command (invite specific player)
 print("[TEST] INVITE command")
-m.send(c1a, "HANGMAN INVITE " + c1d.name)
+m.send(c1a, "HANGMAN INVITE " + c1d.nick)
 m.expect(c1d, "c1d gets invite notice", ".*invites you to join hangman lobby")
 m.expect(c1a, "c1a gets invite confirmation", "Invitation sent")
 m.clearlog()

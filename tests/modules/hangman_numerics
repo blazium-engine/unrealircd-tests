@@ -48,7 +48,7 @@ print()
 
 # Test 5: RPL_HANGMANINVITECODE (2505)
 print("[TEST] RPL_HANGMANINVITECODE (2505)")
-m.send(c1a, "HANGMAN INVITE " + c1c.name)
+m.send(c1a, "HANGMAN INVITE " + c1c.nick)
 m.expect(c1c, "c1c gets invite code", ":.*2505.*")
 m.expect(c1a, "c1a gets invite confirmation", "Invitation sent")
 m.clearlog()

@@ -88,16 +88,21 @@ print()
 
 # Test 8: Commands when not in lobby
 print("[TEST] Commands when not in lobby")
+# Leave the lobby first
+m.send(c1a, "HANGMAN LEAVE")
+m.expect(c1a, "c1a leaves lobby", ":.*2504.*")
+m.clearlog()
+
 m.send(c1a, "HANGMAN START")
-m.expect(c1a, "c1a gets not in lobby error", ":.*2542.*")
+m.expect(c1a, "c1a gets not in lobby error", ":.*2540.*")
 m.clearlog()
 
 m.send(c1a, "HANGMAN SCORE")
-m.expect(c1a, "c1a gets not in lobby error", ":.*2542.*")
+m.expect(c1a, "c1a gets not in lobby error", ":.*2540.*")
 m.clearlog()
 
 m.send(c1a, "HANGMAN INFO")
-m.expect(c1a, "c1a gets not in lobby error", ":.*2542.*")
+m.expect(c1a, "c1a gets not in lobby error", ":.*2540.*")
 m.clearlog()
 print()
 
