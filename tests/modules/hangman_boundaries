@@ -37,13 +37,21 @@ print()
 print("[TEST] Max players (10)")
 m.send(c1a, "HANGMAN CREATE 10 30")
 m.expect(c1a, "c1a creates max player lobby", ":.*2500.*")
+max_invite_line = m.expect(c1a, "c1a gets max invite code", ":.*2505.*")
+max_invite_code = max_invite_line.split()[-1] if max_invite_line else None
 m.clearlog()
 
-m.send(c1b, "HANGMAN JOIN ABC12345")
+if max_invite_code:
+    m.send(c1b, f"HANGMAN JOIN {max_invite_code}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
 m.expect(c1b, "c1b joins max lobby", ":.*2503.*")
 m.clearlog()
 
-m.send(c1c, "HANGMAN JOIN ABC12345")
+if max_invite_code:
+    m.send(c1c, f"HANGMAN JOIN {max_invite_code}")
+else:
+    m.send(c1c, "HANGMAN JOIN ABC12345")
 m.expect(c1c, "c1c joins max lobby", ":.*2503.*")
 m.clearlog()
 print()

@@ -13,8 +13,8 @@ c1b = m.new('c1b')
 c1c = m.new('c1c')
 m.connect()
 
-# Test 1: First dealer random selection
-print("[TEST] First dealer random selection")
+# Test 1: First dealer selection (deterministic - always host)
+print("[TEST] First dealer selection")
 m.send(c1a, "HANGMAN CREATE 3 50")
 m.expect(c1a, "c1a creates lobby", ":.*2500.*")
 invite_line = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
@@ -61,7 +61,7 @@ print()
 print("[TEST] Dealer cannot guess")
 # Current dealer tries to guess
 m.send(c1a, "HANGMANGUESS A")
-m.expect(c1a, "c1a gets dealer cannot guess error", ":.*2545.*")
+m.expect(c1a, "c1a gets dealer cannot guess error", ":.*2542.*")
 m.clearlog()
 print()
 
@@ -69,7 +69,7 @@ print()
 print("[TEST] Only dealer can set word")
 # Non-dealer tries to set word
 m.send(c1b, "HANGMANWORD NOTDEALER")
-m.expect(c1b, "c1b gets not dealer error", ":.*2546.*")
+m.expect(c1b, "c1b gets not dealer error", ":.*2541.*")
 m.clearlog()
 print()
 

@@ -59,6 +59,7 @@ print()
 
 # Test 5: Dealer sets word
 print("[TEST] Dealer sets word")
+# c1a is always the first dealer
 m.send(c1a, "HANGMANWORD ELEPHANT")
 m.expect(c1a, "c1a gets word set", ":.*2512.*")
 m.expect(c1b, "c1b sees word set", ":.*2512.*")
