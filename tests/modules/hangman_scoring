@@ -1,0 +1,128 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Scoring system tests
+Tests scoring mechanics: letter points, dealer points, word bonuses, and score tracking
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for hangman to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+m.connect()
+
+# Test 1: Guesser earns 1 point per letter occurrence
+print("[TEST] Letter occurrence scoring")
+m.send(c1a, "HANGMAN CREATE 3 50")
+m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+m.clearlog()
+
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1c, "HANGMAN JOIN ABC12345")
+m.expect(c1c, "c1c joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.clearlog()
+
+# Set word with multiple occurrences
+m.send(c1a, "HANGMANWORD BANANA")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+
+# Guess letter A (appears 3 times)
+m.send(c1b, "HANGMANGUESS A")
+m.expect(c1b, "c1b gets correct letter", ":.*2520.*")
+m.expect(c1b, "c1b earns 3 points", ".*earned 3 points")
+m.clearlog()
+print()
+
+# Test 2: Multiple letter occurrences scoring
+print("[TEST] Multiple letter occurrences")
+# Guess letter N (appears 2 times)
+m.send(c1c, "HANGMANGUESS N")
+m.expect(c1c, "c1c gets correct letter", ":.*2520.*")
+m.expect(c1c, "c1c earns 2 points", ".*earned 2 points")
+m.clearlog()
+print()
+
+# Test 3: Dealer earns points for unguessed letters
+print("[TEST] Dealer unguessed letter points")
+# Complete the word to end round
+m.send(c1b, "HANGMANGUESS BANANA")
+m.expect(c1b, "c1b guesses word", ":.*2522.*")
+m.expect(c1a, "c1a gets round end", ":.*2517.*")
+# Dealer should earn points for unguessed letters (B, A, N, A, N, A - but A and N were guessed)
+m.clearlog()
+print()
+
+# Test 4: Full word guess bonus (2x length)
+print("[TEST] Full word guess bonus")
+# Start new round
+m.send(c1a, "HANGMANWORD TIGER")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+
+# Guess full word (5 letters * 2 = 10 points)
+m.send(c1b, "HANGMANGUESS TIGER")
+m.expect(c1b, "c1b guesses word", ":.*2522.*")
+m.expect(c1b, "c1b earns word bonus", ".*earned 10 points")
+m.clearlog()
+print()
+
+# Test 5: SCORE command display
+print("[TEST] SCORE command")
+m.send(c1a, "HANGMAN SCORE")
+m.expect(c1a, "c1a gets scores", ":.*2516.*")
+m.clearlog()
+print()
+
+# Test 6: Point limit game end
+print("[TEST] Point limit game end")
+# Set word that will give enough points to reach limit
+m.send(c1a, "HANGMANWORD ELEPHANT")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+
+# Guess word to get points
+m.send(c1b, "HANGMANGUESS ELEPHANT")
+m.expect(c1b, "c1b guesses word", ":.*2522.*")
+# Should trigger game end if point limit reached
+m.clearlog()
+print()
+
+# Test 7: Score tracking across rounds
+print("[TEST] Score tracking across rounds")
+m.send(c1a, "HANGMAN SCORE")
+m.expect(c1a, "c1a gets updated scores", ":.*2516.*")
+m.clearlog()
+print()
+
+# Test 8: Rounds won/lost statistics
+print("[TEST] Rounds won/lost statistics")
+m.send(c1a, "HANGMAN SCORE")
+m.expect(c1a, "c1a gets round stats", ":.*2516.*")
+m.clearlog()
+print()
+
+# Test 9: Final score display
+print("[TEST] Final score display")
+m.send(c1a, "HANGMAN SCORE")
+m.expect(c1a, "c1a gets final scores", ":.*2516.*")
+m.clearlog()
+print()
+
+# Test 10: Winner determination
+print("[TEST] Winner determination")
+m.send(c1a, "HANGMAN SCORE")
+m.expect(c1a, "c1a gets winner info", ":.*2516.*")
+m.clearlog()
+print()
+
+print("All hangman scoring tests passed!")

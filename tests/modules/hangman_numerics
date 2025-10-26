@@ -1,0 +1,145 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Numeric replies tests
+Tests all hangman-specific numeric replies (2500-2599) and error handling
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for hangman to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+m.connect()
+
+# Test 1: RPL_HANGMANLOBBYCREATED (2500)
+print("[TEST] RPL_HANGMANLOBBYCREATED (2500)")
+m.send(c1a, "HANGMAN CREATE 4 30")
+m.expect(c1a, "c1a gets lobby created", ":.*2500.*")
+m.clearlog()
+print()
+
+# Test 2: RPL_HANGMANLOBBYLIST (2501)
+print("[TEST] RPL_HANGMANLOBBYLIST (2501)")
+m.send(c1b, "HANGMAN LIST")
+m.expect(c1b, "c1b gets lobby list", ":.*2501.*")
+m.clearlog()
+print()
+
+# Test 3: RPL_HANGMANLOBBYLISTEND (2502)
+print("[TEST] RPL_HANGMANLOBBYLISTEND (2502)")
+m.send(c1b, "HANGMAN LIST")
+m.expect(c1b, "c1b gets lobby list end", ":.*2502.*")
+m.clearlog()
+print()
+
+# Test 4: RPL_HANGMANJOINED (2503)
+print("[TEST] RPL_HANGMANJOINED (2503)")
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b gets joined", ":.*2503.*")
+m.clearlog()
+print()
+
+# Test 5: RPL_HANGMANLEFT (2504)
+print("[TEST] RPL_HANGMANLEFT (2504)")
+m.send(c1b, "HANGMAN LEAVE")
+m.expect(c1b, "c1b gets left", ":.*2504.*")
+m.clearlog()
+print()
+
+# Test 6: RPL_HANGMANINVITECODE (2505)
+print("[TEST] RPL_HANGMANINVITECODE (2505)")
+m.send(c1a, "HANGMAN INVITE " + c1b.name)
+m.expect(c1b, "c1b gets invite code", ":.*2505.*")
+m.clearlog()
+print()
+
+# Test 7: RPL_HANGMANLOBBYSEALED (2506)
+print("[TEST] RPL_HANGMANLOBBYSEALED (2506)")
+m.send(c1a, "HANGMAN LOCK")
+m.expect(c1a, "c1a gets lobby sealed", ":.*2506.*")
+m.clearlog()
+print()
+
+# Test 8: RPL_HANGMANLOBBYINFO (2507)
+print("[TEST] RPL_HANGMANLOBBYINFO (2507)")
+m.send(c1a, "HANGMAN INFO")
+m.expect(c1a, "c1a gets lobby info", ":.*2507.*")
+m.clearlog()
+print()
+
+# Test 9: RPL_HANGMANGAMESTART (2510)
+print("[TEST] RPL_HANGMANGAMESTART (2510)")
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a gets game start", ":.*2510.*")
+m.expect(c1b, "c1b gets game start", ":.*2510.*")
+m.clearlog()
+print()
+
+# Test 10: RPL_HANGMANWORDSET (2512)
+print("[TEST] RPL_HANGMANWORDSET (2512)")
+m.send(c1a, "HANGMANWORD TESTWORD")
+m.expect(c1a, "c1a gets word set", ":.*2512.*")
+m.expect(c1b, "c1b gets word set", ":.*2512.*")
+m.clearlog()
+print()
+
+# Test 11: RPL_HANGMANDISPLAY (2513)
+print("[TEST] RPL_HANGMANDISPLAY (2513)")
+m.send(c1a, "HANGMAN STATUS")
+m.expect(c1a, "c1a gets display", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 12: RPL_HANGMANHEALTH (2514)
+print("[TEST] RPL_HANGMANHEALTH (2514)")
+m.send(c1a, "HANGMAN STATUS")
+m.expect(c1a, "c1a gets health", ":.*2514.*")
+m.clearlog()
+print()
+
+# Test 13: RPL_HANGMANSCORES (2516)
+print("[TEST] RPL_HANGMANSCORES (2516)")
+m.send(c1a, "HANGMAN SCORE")
+m.expect(c1a, "c1a gets scores", ":.*2516.*")
+m.clearlog()
+print()
+
+# Test 14: RPL_HANGMANROUNDEND (2517)
+print("[TEST] RPL_HANGMANROUNDEND (2517)")
+m.send(c1b, "HANGMANGUESS TESTWORD")
+m.expect(c1b, "c1b guesses word", ":.*2522.*")
+m.expect(c1a, "c1a gets round end", ":.*2517.*")
+m.expect(c1b, "c1b gets round end", ":.*2517.*")
+m.clearlog()
+print()
+
+# Test 15: Error numerics (2540-2554)
+print("[TEST] Error numerics")
+# Test various error conditions
+m.send(c1c, "HANGMAN JOIN INVALID")
+m.expect(c1c, "c1c gets invalid invite error", ":.*2540.*")
+m.clearlog()
+
+m.send(c1c, "HANGMAN CREATE 1 10")
+m.expect(c1c, "c1c gets invalid max players error", ":.*2541.*")
+m.clearlog()
+
+m.send(c1c, "HANGMANWORD")
+m.expect(c1c, "c1c gets not in lobby error", ":.*2542.*")
+m.clearlog()
+print()
+
+# Test 16: Message tag presence validation
+print("[TEST] Message tag presence")
+m.send(c1a, "HANGMAN CREATE 3 20")
+m.expect(c1a, "c1a gets lobby created with tags", "@.*hangman-lobby.*")
+m.clearlog()
+print()
+
+print("All hangman numerics tests passed!")

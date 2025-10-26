@@ -1,0 +1,146 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Edge cases tests
+Tests edge cases and boundary conditions for hangman functionality
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for hangman to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+m.connect()
+
+# Test 1: Single letter word
+print("[TEST] Single letter word")
+m.send(c1a, "HANGMAN CREATE 3 50")
+m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+m.clearlog()
+
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1c, "HANGMAN JOIN ABC12345")
+m.expect(c1c, "c1c joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.clearlog()
+
+m.send(c1a, "HANGMANWORD A")
+m.expect(c1a, "c1a sets single letter word", ":.*2512.*")
+m.expect(c1a, "c1a sees single letter display", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 2: Maximum length word (20 chars)
+print("[TEST] Maximum length word")
+m.send(c1a, "HANGMANWORD ABCDEFGHIJKLMNOPQRST")
+m.expect(c1a, "c1a sets max length word", ":.*2512.*")
+m.expect(c1a, "c1a sees max length display", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 3: Word with multiple spaces
+print("[TEST] Word with multiple spaces")
+m.send(c1a, "HANGMANWORD HELLO  WORLD  TEST")
+m.expect(c1a, "c1a sets word with multiple spaces", ":.*2512.*")
+m.expect(c1a, "c1a sees spaces in display", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 4: All vowels word
+print("[TEST] All vowels word")
+m.send(c1a, "HANGMANWORD AEOUI")
+m.expect(c1a, "c1a sets all vowels word", ":.*2512.*")
+m.expect(c1a, "c1a sees vowels display", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 5: No vowels word
+print("[TEST] No vowels word")
+m.send(c1a, "HANGMANWORD BCD")
+m.expect(c1a, "c1a sets no vowels word", ":.*2512.*")
+m.expect(c1a, "c1a sees consonants display", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 6: Player disconnect during word setting
+print("[TEST] Player disconnect during word setting")
+# Simulate disconnect by having player leave
+m.send(c1b, "HANGMAN LEAVE")
+m.expect(c1b, "c1b leaves during word setting", ":.*2504.*")
+m.expect(c1a, "c1a sees c1b left", ".*left the lobby")
+m.clearlog()
+print()
+
+# Test 7: Player disconnect during guessing
+print("[TEST] Player disconnect during guessing")
+# Rejoin and start new game
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b rejoins", ":.*2503.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts new game", ":.*2510.*")
+m.clearlog()
+
+m.send(c1a, "HANGMANWORD TESTWORD")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+
+# Disconnect during guessing
+m.send(c1c, "HANGMAN LEAVE")
+m.expect(c1c, "c1c leaves during guessing", ":.*2504.*")
+m.expect(c1a, "c1a sees c1c left", ".*left the lobby")
+m.clearlog()
+print()
+
+# Test 8: Dealer disconnect handling
+print("[TEST] Dealer disconnect handling")
+# Create new game with c1b as dealer
+m.send(c1b, "HANGMAN START")
+m.expect(c1b, "c1b starts game", ":.*2510.*")
+m.clearlog()
+
+m.send(c1b, "HANGMANWORD DEALERTEST")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
+m.clearlog()
+
+# Dealer disconnects
+m.send(c1b, "HANGMAN LEAVE")
+m.expect(c1b, "c1b leaves as dealer", ":.*2504.*")
+m.expect(c1a, "c1a sees dealer left", ".*left the lobby")
+m.clearlog()
+print()
+
+# Test 9: Insufficient players (< 2)
+print("[TEST] Insufficient players")
+# Try to start game with only 1 player
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a gets insufficient players error", ":.*2545.*")
+m.clearlog()
+print()
+
+# Test 10: Maximum players (10)
+print("[TEST] Maximum players")
+# Create lobby with max players
+m.send(c1a, "HANGMAN CREATE 10 50")
+m.expect(c1a, "c1a creates max player lobby", ":.*2500.*")
+m.clearlog()
+
+# Join multiple players (simplified - would need 10 clients)
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins max lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1c, "HANGMAN JOIN ABC12345")
+m.expect(c1c, "c1c joins max lobby", ":.*2503.*")
+m.clearlog()
+print()
+
+print("All hangman edge cases tests passed!")

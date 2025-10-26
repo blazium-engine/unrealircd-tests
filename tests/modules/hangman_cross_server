@@ -1,0 +1,134 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Cross-server synchronization tests
+Tests hangman functionality across multiple IRC servers
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# Cross-server test setup
+c1a = m.new('c1a')  # Server 1
+c1b = m.new('c1b')  # Server 1
+c2a = m.new('c2a')  # Server 2
+c2b = m.new('c2b')  # Server 2
+c3a = m.new('c3a')  # Server 3
+m.connect()
+
+# Test 1: Create lobby on server 1
+print("[TEST] Create lobby on server 1")
+m.send(c1a, "HANGMAN CREATE 5 50")
+m.expect(c1a, "c1a gets lobby created", ":.*2500.*")
+m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+m.clearlog()
+print()
+
+# Test 2: Player joins from server 2
+print("[TEST] Player joins from server 2")
+m.send(c2a, "HANGMAN JOIN ABC12345")
+m.expect(c2a, "c2a joins lobby", ":.*2503.*")
+m.expect(c1a, "c1a sees c2a joined", ".*joined the lobby")
+m.clearlog()
+print()
+
+# Test 3: Player joins from server 3
+print("[TEST] Player joins from server 3")
+m.send(c3a, "HANGMAN JOIN ABC12345")
+m.expect(c3a, "c3a joins lobby", ":.*2503.*")
+m.expect(c1a, "c1a sees c3a joined", ".*joined the lobby")
+m.expect(c2a, "c2a sees c3a joined", ".*joined the lobby")
+m.clearlog()
+print()
+
+# Test 4: Dealer on server 1, guessers on 2 and 3
+print("[TEST] Cross-server dealer and guessers")
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.expect(c2a, "c2a gets game start", ":.*2510.*")
+m.expect(c3a, "c3a gets game start", ":.*2510.*")
+m.clearlog()
+print()
+
+# Test 5: Word set synchronization
+print("[TEST] Word set synchronization")
+m.send(c1a, "HANGMANWORD ELEPHANT")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.expect(c2a, "c2a sees word set", ":.*2512.*")
+m.expect(c3a, "c3a sees word set", ":.*2512.*")
+m.expect(c1a, "c1a sees display", ":.*2513.*")
+m.expect(c2a, "c2a sees display", ":.*2513.*")
+m.expect(c3a, "c3a sees display", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 6: Guess synchronization across servers
+print("[TEST] Guess synchronization")
+m.send(c2a, "HANGMANGUESS E")
+m.expect(c2a, "c2a makes guess", ":.*2520.*")
+m.expect(c1a, "c1a sees c2a guess", ".*guessed 'E' correctly")
+m.expect(c3a, "c3a sees c2a guess", ".*guessed 'E' correctly")
+m.expect(c1a, "c1a sees display update", ":.*2513.*")
+m.expect(c2a, "c2a sees display update", ":.*2513.*")
+m.expect(c3a, "c3a sees display update", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 7: Health updates broadcast
+print("[TEST] Health updates broadcast")
+m.send(c3a, "HANGMANGUESS Z")
+m.expect(c3a, "c3a makes wrong guess", ":.*2521.*")
+m.expect(c1a, "c1a sees health update", ":.*2514.*")
+m.expect(c2a, "c2a sees health update", ":.*2514.*")
+m.expect(c3a, "c3a sees health update", ":.*2514.*")
+m.clearlog()
+print()
+
+# Test 8: Round end synchronization
+print("[TEST] Round end synchronization")
+m.send(c2a, "HANGMANGUESS ELEPHANT")
+m.expect(c2a, "c2a guesses word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c2a, "c2a sees round end", ":.*2517.*")
+m.expect(c3a, "c3a sees round end", ":.*2517.*")
+m.clearlog()
+print()
+
+# Test 9: Score updates across servers
+print("[TEST] Score updates across servers")
+m.send(c1a, "HANGMAN SCORE")
+m.expect(c1a, "c1a gets scores", ":.*2516.*")
+m.send(c2a, "HANGMAN SCORE")
+m.expect(c2a, "c2a gets scores", ":.*2516.*")
+m.send(c3a, "HANGMAN SCORE")
+m.expect(c3a, "c3a gets scores", ":.*2516.*")
+m.clearlog()
+print()
+
+# Test 10: Spectator on different server
+print("[TEST] Spectator on different server")
+m.send(c1b, "JOIN #hangman-ABC12345")
+m.expect(c1b, "c1b joins as spectator", "JOIN.*#hangman-")
+m.expect(c1b, "c1b gets spectator notice", "You joined as a spectator")
+m.clearlog()
+print()
+
+# Test 11: Lobby list visible on all servers
+print("[TEST] Lobby list visibility")
+m.send(c1b, "HANGMAN LIST")
+m.expect(c1b, "c1b sees lobby list", ":.*2501.*")
+m.send(c2b, "HANGMAN LIST")
+m.expect(c2b, "c2b sees lobby list", ":.*2501.*")
+m.clearlog()
+print()
+
+# Test 12: Game end synchronization
+print("[TEST] Game end synchronization")
+# Trigger game end by reaching point limit or resignation
+m.send(c1a, "HANGMAN LEAVE")
+m.expect(c1a, "c1a leaves game", ":.*2504.*")
+m.expect(c2a, "c2a sees game end", ".*left the lobby")
+m.expect(c3a, "c3a sees game end", ".*left the lobby")
+m.clearlog()
+print()
+
+print("All hangman cross-server tests passed!")

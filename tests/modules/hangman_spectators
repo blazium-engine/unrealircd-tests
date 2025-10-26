@@ -1,0 +1,105 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Spectator functionality tests
+Tests spectator features and limitations
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for hangman to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+c1d = m.new('c1d')
+m.connect()
+
+# Test 1: Spectator join channel
+print("[TEST] Spectator join channel")
+m.send(c1a, "HANGMAN CREATE 3 50")
+m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+m.clearlog()
+
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1c, "HANGMAN JOIN ABC12345")
+m.expect(c1c, "c1c joins lobby", ":.*2503.*")
+m.clearlog()
+
+# Spectator joins channel directly
+m.send(c1d, "JOIN #hangman-ABC12345")
+m.expect(c1d, "c1d joins as spectator", "JOIN.*#hangman-")
+m.expect(c1d, "c1d gets spectator notice", "You joined as a spectator")
+m.clearlog()
+print()
+
+# Test 2: Spectator see game state
+print("[TEST] Spectator see game state")
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.expect(c1b, "c1b gets game start", ":.*2510.*")
+m.expect(c1c, "c1c gets game start", ":.*2510.*")
+m.expect(c1d, "c1d sees game start", ":.*2510.*")
+m.clearlog()
+
+m.send(c1a, "HANGMANWORD SPECTATORTEST")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.expect(c1b, "c1b sees word set", ":.*2512.*")
+m.expect(c1c, "c1c sees word set", ":.*2512.*")
+m.expect(c1d, "c1d sees word set", ":.*2512.*")
+m.clearlog()
+print()
+
+# Test 3: Spectator cannot guess
+print("[TEST] Spectator cannot guess")
+m.send(c1d, "HANGMANGUESS A")
+m.expect(c1d, "c1d gets spectator cannot guess error", ":.*2547.*")
+m.clearlog()
+print()
+
+# Test 4: Spectator cannot set word
+print("[TEST] Spectator cannot set word")
+m.send(c1d, "HANGMANWORD NOTALLOWED")
+m.expect(c1d, "c1d gets spectator cannot set word error", ":.*2548.*")
+m.clearlog()
+print()
+
+# Test 5: Spectator count tracking
+print("[TEST] Spectator count tracking")
+m.send(c1a, "HANGMAN SPECTATORS")
+m.expect(c1a, "c1a gets spectator count", ":.*2507.*")
+m.clearlog()
+print()
+
+# Test 6: Spectator notifications
+print("[TEST] Spectator notifications")
+m.send(c1b, "HANGMANGUESS S")
+m.expect(c1b, "c1b makes guess", ":.*2520.*")
+m.expect(c1a, "c1a sees guess", ".*guessed 'S' correctly")
+m.expect(c1b, "c1b sees guess", ".*guessed 'S' correctly")
+m.expect(c1c, "c1c sees guess", ".*guessed 'S' correctly")
+m.expect(c1d, "c1d sees guess", ".*guessed 'S' correctly")
+m.clearlog()
+print()
+
+# Test 7: Multiple spectators
+print("[TEST] Multiple spectators")
+# Add another spectator
+m.send(c1a, "HANGMAN INVITE spectator2")
+m.expect(c1a, "c1a sends invite", "Invitation sent")
+m.clearlog()
+
+# Second spectator joins
+m.send(c1a, "JOIN #hangman-ABC12345")
+m.expect(c1a, "c1a joins as second spectator", "JOIN.*#hangman-")
+m.expect(c1a, "c1a gets spectator notice", "You joined as a spectator")
+m.clearlog()
+
+m.send(c1a, "HANGMAN SPECTATORS")
+m.expect(c1a, "c1a gets multiple spectators", ":.*2507.*")
+m.clearlog()
+print()
+
+print("All hangman spectators tests passed!")

@@ -1,0 +1,116 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Lobby management tests
+Tests lobby features: invite codes, passwords, sealing, listing, and management commands
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for hangman to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+c1d = m.new('c1d')
+m.connect()
+
+# Test 1: Invite code generation and validation
+print("[TEST] Invite code generation")
+m.send(c1a, "HANGMAN CREATE 4 30")
+m.expect(c1a, "c1a gets lobby created", ":.*2500.*")
+m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+m.clearlog()
+print()
+
+# Test 2: LIST command (public lobbies)
+print("[TEST] LIST command")
+m.send(c1b, "HANGMAN LIST")
+m.expect(c1b, "c1b gets lobby list header", ":.*2501.*")
+m.expect(c1b, "c1b gets lobby list end", ":.*2502.*")
+m.clearlog()
+print()
+
+# Test 3: INFO command (lobby details)
+print("[TEST] INFO command")
+m.send(c1a, "HANGMAN INFO")
+m.expect(c1a, "c1a gets lobby info", ":.*2507.*")
+m.clearlog()
+print()
+
+# Test 4: LOCK lobby (seal)
+print("[TEST] LOCK lobby")
+m.send(c1a, "HANGMAN LOCK")
+m.expect(c1a, "c1a gets lobby sealed", ":.*2506.*")
+m.clearlog()
+print()
+
+# Test 5: SETPASS command (password protection)
+print("[TEST] SETPASS command")
+m.send(c1a, "HANGMAN SETPASS secret123")
+m.expect(c1a, "c1a gets password set confirmation", "Password set for lobby")
+m.clearlog()
+print()
+
+# Test 6: Join with password
+print("[TEST] Join with password")
+m.send(c1b, "HANGMAN JOIN ABC12345 secret123")
+m.expect(c1b, "c1b joins with password", ":.*2503.*")
+m.expect(c1a, "c1a sees c1b joined", ".*joined the lobby")
+m.clearlog()
+print()
+
+# Test 7: Join password-protected sealed lobby
+print("[TEST] Join password-protected sealed lobby")
+m.send(c1c, "HANGMAN JOIN ABC12345 secret123")
+m.expect(c1c, "c1c joins sealed lobby", ":.*2503.*")
+m.expect(c1a, "c1a sees c1c joined", ".*joined the lobby")
+m.clearlog()
+print()
+
+# Test 8: INVITE command (invite specific player)
+print("[TEST] INVITE command")
+m.send(c1a, "HANGMAN INVITE " + c1d.name)
+m.expect(c1d, "c1d gets invite notice", ".*invites you to join hangman lobby")
+m.expect(c1a, "c1a gets invite confirmation", "Invitation sent")
+m.clearlog()
+print()
+
+# Test 9: SPECTATORS command
+print("[TEST] SPECTATORS command")
+m.send(c1a, "HANGMAN SPECTATORS")
+m.expect(c1a, "c1a gets spectators list", ":.*2507.*")
+m.clearlog()
+print()
+
+# Test 10: Spectator join and viewing
+print("[TEST] Spectator join")
+# Create a spectator by having c1d join the channel directly
+m.send(c1d, "JOIN #hangman-ABC12345")
+m.expect(c1d, "c1d joins as spectator", "JOIN.*#hangman-")
+m.expect(c1d, "c1d gets spectator notice", "You joined as a spectator")
+m.clearlog()
+print()
+
+# Test 11: Host leave destroys lobby
+print("[TEST] Host leave destroys lobby")
+m.send(c1a, "HANGMAN LEAVE")
+m.expect(c1a, "c1a leaves lobby", ":.*2504.*")
+m.expect(c1a, "c1a loses hangman player mode", "MODE.*-h")
+# Other players should be notified lobby was destroyed
+m.clearlog()
+print()
+
+# Test 12: Player count limits (2-10 players)
+print("[TEST] Player count limits")
+# Create new lobby
+m.send(c1a, "HANGMAN CREATE 2 20")
+m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+m.clearlog()
+
+# Try to join with third player (should fail)
+m.send(c1c, "HANGMAN JOIN ABC12345")
+m.expect(c1c, "c1c gets lobby full error", ":.*2549.*")
+m.clearlog()
+print()
+
+print("All hangman lobby management tests passed!")

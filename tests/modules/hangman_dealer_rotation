@@ -1,0 +1,96 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Dealer rotation tests
+Tests dealer mechanics and rotation system
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for hangman to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+m.connect()
+
+# Test 1: First dealer random selection
+print("[TEST] First dealer random selection")
+m.send(c1a, "HANGMAN CREATE 3 50")
+m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+m.clearlog()
+
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1c, "HANGMAN JOIN ABC12345")
+m.expect(c1c, "c1c joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+# First dealer should be randomly selected
+m.clearlog()
+print()
+
+# Test 2: Dealer rotation after round
+print("[TEST] Dealer rotation after round")
+# Set word and complete round
+m.send(c1a, "HANGMANWORD TESTWORD")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+
+m.send(c1b, "HANGMANGUESS TESTWORD")
+m.expect(c1b, "c1b guesses word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
+# Dealer should rotate to next player
+m.clearlog()
+print()
+
+# Test 3: Dealer cannot guess
+print("[TEST] Dealer cannot guess")
+# Current dealer tries to guess
+m.send(c1a, "HANGMANGUESS A")
+m.expect(c1a, "c1a gets dealer cannot guess error", ":.*2545.*")
+m.clearlog()
+print()
+
+# Test 4: Only dealer can set word
+print("[TEST] Only dealer can set word")
+# Non-dealer tries to set word
+m.send(c1b, "HANGMANWORD NOTDEALER")
+m.expect(c1b, "c1b gets not dealer error", ":.*2546.*")
+m.clearlog()
+print()
+
+# Test 5: Dealer skip loses round
+print("[TEST] Dealer skip loses round")
+# Dealer skips their turn
+m.send(c1a, "HANGMAN SKIP")
+m.expect(c1a, "c1a skips turn", "Dealer skipped their turn")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
+# Dealer should lose the round
+m.clearlog()
+print()
+
+# Test 6: Dealer disconnect during word setting
+print("[TEST] Dealer disconnect during word setting")
+# Start new round
+m.send(c1a, "HANGMANWORD NEWWORD")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+
+# Dealer disconnects
+m.send(c1a, "HANGMAN LEAVE")
+m.expect(c1a, "c1a leaves as dealer", ":.*2504.*")
+m.expect(c1b, "c1b sees dealer left", ".*left the lobby")
+m.expect(c1c, "c1c sees dealer left", ".*left the lobby")
+# Game should handle dealer disconnect
+m.clearlog()
+print()
+
+print("All hangman dealer rotation tests passed!")

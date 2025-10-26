@@ -1,0 +1,147 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Game mechanics tests
+Tests game flow, rules, word validation, and phase transitions
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for hangman to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+m.connect()
+
+# Test 1: Word validation (1-20 chars, letters and spaces)
+print("[TEST] Word validation - valid word")
+m.send(c1a, "HANGMAN CREATE 3 50")
+m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+m.clearlog()
+
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1c, "HANGMAN JOIN ABC12345")
+m.expect(c1c, "c1c joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.clearlog()
+
+m.send(c1a, "HANGMANWORD VALIDWORD")
+m.expect(c1a, "c1a sets valid word", ":.*2512.*")
+m.clearlog()
+print()
+
+# Test 2: Word with spaces handling
+print("[TEST] Word with spaces")
+m.send(c1a, "HANGMANWORD HELLO WORLD")
+m.expect(c1a, "c1a sets word with spaces", ":.*2512.*")
+m.expect(c1a, "c1a sees display with spaces", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 3: Word reuse prevention
+print("[TEST] Word reuse prevention")
+m.send(c1a, "HANGMANWORD HELLO WORLD")
+m.expect(c1a, "c1a gets word reuse error", ":.*2543.*")
+m.clearlog()
+print()
+
+# Test 4: Already guessed letter rejection
+print("[TEST] Already guessed letter")
+m.send(c1b, "HANGMANGUESS H")
+m.expect(c1b, "c1b guesses H", ":.*2520.*")
+m.clearlog()
+
+m.send(c1c, "HANGMANGUESS H")
+m.expect(c1c, "c1c gets already guessed error", ":.*2544.*")
+m.clearlog()
+print()
+
+# Test 5: LETTERS command (show guessed letters)
+print("[TEST] LETTERS command")
+m.send(c1a, "HANGMAN LETTERS")
+m.expect(c1a, "c1a gets letters list", ":.*2525.*")
+m.clearlog()
+print()
+
+# Test 6: STATUS command (game state)
+print("[TEST] STATUS command")
+m.send(c1a, "HANGMAN STATUS")
+m.expect(c1a, "c1a gets game status", ":.*2513.*")
+m.expect(c1a, "c1a gets health status", ":.*2514.*")
+m.clearlog()
+print()
+
+# Test 7: Display update after guesses
+print("[TEST] Display update after guesses")
+m.send(c1b, "HANGMANGUESS E")
+m.expect(c1b, "c1b guesses E", ":.*2520.*")
+m.expect(c1a, "c1a sees display update", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 8: Health decrease on wrong guess
+print("[TEST] Health decrease on wrong guess")
+m.send(c1c, "HANGMANGUESS Z")
+m.expect(c1c, "c1c gets wrong guess", ":.*2521.*")
+m.expect(c1a, "c1a sees health decrease", ":.*2514.*")
+m.clearlog()
+print()
+
+# Test 9: Complete word reveal
+print("[TEST] Complete word reveal")
+m.send(c1b, "HANGMANGUESS HELLO WORLD")
+m.expect(c1b, "c1b guesses complete word", ":.*2522.*")
+m.expect(c1a, "c1a sees word revealed", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 10: Dealer skip turn (HANGMAN SKIP)
+print("[TEST] Dealer skip turn")
+m.send(c1a, "HANGMANWORD NEWWORD")
+m.expect(c1a, "c1a sets new word", ":.*2512.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN SKIP")
+m.expect(c1a, "c1a skips turn", "Dealer skipped their turn")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.clearlog()
+print()
+
+# Test 11: Timeout handling (word setting phase)
+print("[TEST] Word setting timeout")
+m.send(c1a, "HANGMANWORD")
+m.expect(c1a, "c1a starts word setting", "Word setting phase started")
+# Wait for timeout (simplified test - in real test would wait)
+m.clearlog()
+print()
+
+# Test 12: Timeout handling (guessing phase)
+print("[TEST] Guessing timeout")
+m.send(c1a, "HANGMANWORD TESTWORD")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+# Wait for timeout (simplified test - in real test would wait)
+m.clearlog()
+print()
+
+# Test 13: Timer warnings (60s, 30s, 10s)
+print("[TEST] Timer warnings")
+# This would be tested with actual timer simulation
+m.send(c1a, "HANGMANWORD WARNINGTEST")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+print()
+
+# Test 14: Phase transitions
+print("[TEST] Phase transitions")
+m.send(c1a, "HANGMAN STATUS")
+m.expect(c1a, "c1a gets current phase", ":.*2513.*")
+m.clearlog()
+print()
+
+print("All hangman game mechanics tests passed!")

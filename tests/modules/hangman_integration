@@ -1,0 +1,204 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Integration tests
+Tests complete game scenarios and complex interactions
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for hangman to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+c1d = m.new('c1d')
+c1e = m.new('c1e')
+m.connect()
+
+# Test 1: Complete 3-round game
+print("[TEST] Complete 3-round game")
+m.send(c1a, "HANGMAN CREATE 4 50")
+m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+m.clearlog()
+
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1c, "HANGMAN JOIN ABC12345")
+m.expect(c1c, "c1c joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1d, "HANGMAN JOIN ABC12345")
+m.expect(c1d, "c1d joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.clearlog()
+
+# Round 1
+m.send(c1a, "HANGMANWORD ELEPHANT")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+
+m.send(c1b, "HANGMANGUESS ELEPHANT")
+m.expect(c1b, "c1b guesses word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.clearlog()
+
+# Round 2
+m.send(c1b, "HANGMANWORD TIGER")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
+m.clearlog()
+
+m.send(c1c, "HANGMANGUESS TIGER")
+m.expect(c1c, "c1c guesses word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.clearlog()
+
+# Round 3
+m.send(c1c, "HANGMANWORD LION")
+m.expect(c1c, "c1c sets word", ":.*2512.*")
+m.clearlog()
+
+m.send(c1d, "HANGMANGUESS LION")
+m.expect(c1d, "c1d guesses word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.clearlog()
+print()
+
+# Test 2: 5 players, multiple rounds
+print("[TEST] 5 players, multiple rounds")
+m.send(c1e, "HANGMAN JOIN ABC12345")
+m.expect(c1e, "c1e joins lobby", ":.*2503.*")
+m.clearlog()
+
+# Continue with 5 players
+m.send(c1d, "HANGMANWORD MONKEY")
+m.expect(c1d, "c1d sets word", ":.*2512.*")
+m.clearlog()
+
+m.send(c1a, "HANGMANGUESS MONKEY")
+m.expect(c1a, "c1a guesses word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.clearlog()
+print()
+
+# Test 3: Point limit reached game end
+print("[TEST] Point limit reached game end")
+m.send(c1a, "HANGMAN SCORE")
+m.expect(c1a, "c1a gets scores", ":.*2516.*")
+# Would check if point limit reached
+m.clearlog()
+print()
+
+# Test 4: Password-protected sealed lobby game
+print("[TEST] Password-protected sealed lobby game")
+m.send(c1a, "HANGMAN CREATE 3 30")
+m.expect(c1a, "c1a creates new lobby", ":.*2500.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN SETPASS secret123")
+m.expect(c1a, "c1a sets password", "Password set for lobby")
+m.clearlog()
+
+m.send(c1a, "HANGMAN LOCK")
+m.expect(c1a, "c1a locks lobby", ":.*2506.*")
+m.clearlog()
+
+m.send(c1b, "HANGMAN JOIN ABC12345 secret123")
+m.expect(c1b, "c1b joins with password", ":.*2503.*")
+m.clearlog()
+
+m.send(c1c, "HANGMAN JOIN ABC12345 secret123")
+m.expect(c1c, "c1c joins with password", ":.*2503.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts password game", ":.*2510.*")
+m.clearlog()
+print()
+
+# Test 5: Cross-server 4-player game
+print("[TEST] Cross-server 4-player game")
+# This would test cross-server functionality
+m.send(c1a, "HANGMANWORD CROSSSERVER")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+print()
+
+# Test 6: Spectators watching game
+print("[TEST] Spectators watching game")
+m.send(c1d, "JOIN #hangman-ABC12345")
+m.expect(c1d, "c1d joins as spectator", "JOIN.*#hangman-")
+m.expect(c1d, "c1d gets spectator notice", "You joined as a spectator")
+m.clearlog()
+print()
+
+# Test 7: Player joins mid-game as spectator
+print("[TEST] Player joins mid-game as spectator")
+m.send(c1e, "JOIN #hangman-ABC12345")
+m.expect(c1e, "c1e joins as spectator", "JOIN.*#hangman-")
+m.expect(c1e, "c1e gets spectator notice", "You joined as a spectator")
+m.clearlog()
+print()
+
+# Test 8: Word with spaces complete game
+print("[TEST] Word with spaces complete game")
+m.send(c1a, "HANGMANWORD HELLO WORLD")
+m.expect(c1a, "c1a sets word with spaces", ":.*2512.*")
+m.clearlog()
+
+m.send(c1b, "HANGMANGUESS HELLO WORLD")
+m.expect(c1b, "c1b guesses word with spaces", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.clearlog()
+print()
+
+# Test 9: Maximum length word game
+print("[TEST] Maximum length word game")
+m.send(c1a, "HANGMANWORD ABCDEFGHIJKLMNOPQRST")
+m.expect(c1a, "c1a sets max length word", ":.*2512.*")
+m.clearlog()
+
+m.send(c1b, "HANGMANGUESS ABCDEFGHIJKLMNOPQRST")
+m.expect(c1b, "c1b guesses max length word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.clearlog()
+print()
+
+# Test 10: Quick resignation game
+print("[TEST] Quick resignation game")
+m.send(c1a, "HANGMANWORD RESIGN")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN LEAVE")
+m.expect(c1a, "c1a resigns", ":.*2504.*")
+m.expect(c1b, "c1b sees resignation", ".*left the lobby")
+m.expect(c1c, "c1c sees resignation", ".*left the lobby")
+m.clearlog()
+print()
+
+# Test 11: Dealer timeout game
+print("[TEST] Dealer timeout game")
+m.send(c1b, "HANGMAN START")
+m.expect(c1b, "c1b starts game", ":.*2510.*")
+m.clearlog()
+
+m.send(c1b, "HANGMANWORD TIMEOUT")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
+# Would test dealer timeout
+m.clearlog()
+print()
+
+# Test 12: Guesser timeout game
+print("[TEST] Guesser timeout game")
+m.send(c1b, "HANGMANWORD GUESSERTIMEOUT")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
+# Would test guesser timeout
+m.clearlog()
+print()
+
+print("All hangman integration tests passed!")

@@ -1,0 +1,99 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Command validation tests
+Tests command parameter validation and error handling
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for hangman to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+m.connect()
+
+# Test 1: CREATE with invalid max_players
+print("[TEST] CREATE with invalid max_players")
+m.send(c1a, "HANGMAN CREATE 1 30")
+m.expect(c1a, "c1a gets invalid max players error", ":.*2541.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN CREATE 11 30")
+m.expect(c1a, "c1a gets invalid max players error", ":.*2541.*")
+m.clearlog()
+print()
+
+# Test 2: CREATE with invalid point_limit
+print("[TEST] CREATE with invalid point_limit")
+m.send(c1a, "HANGMAN CREATE 4 -1")
+m.expect(c1a, "c1a gets invalid point limit error", ":.*2542.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN CREATE 4 1001")
+m.expect(c1a, "c1a gets invalid point limit error", ":.*2542.*")
+m.clearlog()
+print()
+
+# Test 3: JOIN without invite code
+print("[TEST] JOIN without invite code")
+m.send(c1a, "HANGMAN JOIN")
+m.expect(c1a, "c1a gets missing invite code error", ":.*2540.*")
+m.clearlog()
+print()
+
+# Test 4: JOIN with invalid invite code
+print("[TEST] JOIN with invalid invite code")
+m.send(c1a, "HANGMAN JOIN INVALID123")
+m.expect(c1a, "c1a gets invalid invite code error", ":.*2540.*")
+m.clearlog()
+print()
+
+# Test 5: HANGMANWORD without word
+print("[TEST] HANGMANWORD without word")
+m.send(c1a, "HANGMAN CREATE 4 30")
+m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+m.clearlog()
+
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.clearlog()
+
+m.send(c1a, "HANGMANWORD")
+m.expect(c1a, "c1a gets missing word error", ":.*2543.*")
+m.clearlog()
+print()
+
+# Test 6: HANGMANWORD too long
+print("[TEST] HANGMANWORD too long")
+m.send(c1a, "HANGMANWORD THISWORDISTOOLONGANDEXCEEDSTWENTYCHARS")
+m.expect(c1a, "c1a gets word too long error", ":.*2543.*")
+m.clearlog()
+print()
+
+# Test 7: HANGMANGUESS without guess
+print("[TEST] HANGMANGUESS without guess")
+m.send(c1b, "HANGMANGUESS")
+m.expect(c1b, "c1b gets missing guess error", ":.*2544.*")
+m.clearlog()
+print()
+
+# Test 8: Commands when not in lobby
+print("[TEST] Commands when not in lobby")
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a gets not in lobby error", ":.*2542.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN SCORE")
+m.expect(c1a, "c1a gets not in lobby error", ":.*2542.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN INFO")
+m.expect(c1a, "c1a gets not in lobby error", ":.*2542.*")
+m.clearlog()
+print()
+
+print("All hangman commands validation tests passed!")

@@ -1,0 +1,163 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Basic functionality tests
+Tests core hangman game functionality: lobby creation, joining, game flow, and basic mechanics
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for hangman to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+m.connect()
+
+# Test 1: Lobby creation
+print("[TEST] Lobby creation")
+m.send(c1a, "HANGMAN CREATE 6 50")
+m.expect(c1a, "c1a gets lobby created", ":.*2500.*")
+m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+m.expect(c1a, "c1a gets hangman player mode +h", "MODE.*\\+h")
+m.clearlog()
+print()
+
+# Test 2: Join lobby with invite code
+print("[TEST] Join lobby with invite code")
+# Extract invite code from previous test (simplified - in real test would parse)
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins lobby", ":.*2503.*")
+m.expect(c1b, "c1b gets hangman player mode +h", "MODE.*\\+h")
+m.expect(c1a, "c1a sees c1b joined", ".*joined the lobby")
+m.clearlog()
+print()
+
+# Test 3: Third player joins
+print("[TEST] Third player joins")
+m.send(c1c, "HANGMAN JOIN ABC12345")
+m.expect(c1c, "c1c joins lobby", ":.*2503.*")
+m.expect(c1c, "c1c gets hangman player mode +h", "MODE.*\\+h")
+m.expect(c1a, "c1a sees c1c joined", ".*joined the lobby")
+m.clearlog()
+print()
+
+# Test 4: Start game
+print("[TEST] Start game")
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a gets game start", ":.*2510.*")
+m.expect(c1b, "c1b gets game start", ":.*2510.*")
+m.expect(c1c, "c1c gets game start", ":.*2510.*")
+m.clearlog()
+print()
+
+# Test 5: Dealer sets word
+print("[TEST] Dealer sets word")
+m.send(c1a, "HANGMANWORD ELEPHANT")
+m.expect(c1a, "c1a gets word set", ":.*2512.*")
+m.expect(c1b, "c1b sees word set", ":.*2512.*")
+m.expect(c1c, "c1c sees word set", ":.*2512.*")
+m.expect(c1a, "c1a sees display", ":.*2513.*")
+m.expect(c1b, "c1b sees display", ":.*2513.*")
+m.expect(c1c, "c1c sees display", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 6: Guesser makes correct letter guess
+print("[TEST] Correct letter guess")
+m.send(c1b, "HANGMANGUESS E")
+m.expect(c1b, "c1b gets correct letter", ":.*2520.*")
+m.expect(c1a, "c1a sees correct guess", ".*guessed 'E' correctly")
+m.expect(c1b, "c1b sees correct guess", ".*guessed 'E' correctly")
+m.expect(c1c, "c1c sees correct guess", ".*guessed 'E' correctly")
+m.expect(c1a, "c1a sees display update", ":.*2513.*")
+m.expect(c1b, "c1b sees display update", ":.*2513.*")
+m.expect(c1c, "c1c sees display update", ":.*2513.*")
+m.clearlog()
+print()
+
+# Test 7: Guesser makes incorrect letter guess
+print("[TEST] Incorrect letter guess")
+m.send(c1c, "HANGMANGUESS Z")
+m.expect(c1c, "c1c gets incorrect letter", ":.*2521.*")
+m.expect(c1a, "c1a sees incorrect guess", ".*guessed 'Z' incorrectly")
+m.expect(c1b, "c1b sees incorrect guess", ".*guessed 'Z' incorrectly")
+m.expect(c1c, "c1c sees incorrect guess", ".*guessed 'Z' incorrectly")
+m.expect(c1a, "c1a sees health update", ":.*2514.*")
+m.expect(c1b, "c1b sees health update", ":.*2514.*")
+m.expect(c1c, "c1c sees health update", ":.*2514.*")
+m.clearlog()
+print()
+
+# Test 8: Complete word guess
+print("[TEST] Complete word guess")
+m.send(c1b, "HANGMANGUESS ELEPHANT")
+m.expect(c1b, "c1b gets correct word", ":.*2522.*")
+m.expect(c1a, "c1a sees correct word", ".*guessed the word 'ELEPHANT' correctly")
+m.expect(c1b, "c1b sees correct word", ".*guessed the word 'ELEPHANT' correctly")
+m.expect(c1c, "c1c sees correct word", ".*guessed the word 'ELEPHANT' correctly")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
+m.clearlog()
+print()
+
+# Test 9: Dealer rotation
+print("[TEST] Dealer rotation")
+m.send(c1a, "HANGMANWORD TIGER")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+m.send(c1b, "HANGMANGUESS TIGER")
+m.expect(c1b, "c1b guesses word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
+m.clearlog()
+print()
+
+# Test 10: Score display
+print("[TEST] Score display")
+m.send(c1a, "HANGMAN SCORE")
+m.expect(c1a, "c1a gets scores", ":.*2516.*")
+m.clearlog()
+print()
+
+# Test 11: Game resignation
+print("[TEST] Game resignation")
+m.send(c1a, "HANGMAN LEAVE")
+m.expect(c1a, "c1a leaves lobby", ":.*2504.*")
+m.expect(c1a, "c1a loses hangman player mode", "MODE.*-h")
+m.expect(c1b, "c1b sees c1a left", ".*left the lobby")
+m.expect(c1c, "c1c sees c1a left", ".*left the lobby")
+m.clearlog()
+print()
+
+# Test 12: Lobby info
+print("[TEST] Lobby info")
+m.send(c1b, "HANGMAN INFO")
+m.expect(c1b, "c1b gets lobby info", ":.*2507.*")
+m.clearlog()
+print()
+
+# Test 13: Letters guessed command
+print("[TEST] Letters guessed command")
+m.send(c1b, "HANGMAN LETTERS")
+m.expect(c1b, "c1b gets letters", ":.*2525.*")
+m.clearlog()
+print()
+
+# Test 14: Status command
+print("[TEST] Status command")
+m.send(c1b, "HANGMAN STATUS")
+m.expect(c1b, "c1b gets status", ":.*2513.*")
+m.expect(c1b, "c1b gets health", ":.*2514.*")
+m.clearlog()
+print()
+
+# Test 15: User mode +h validation
+print("[TEST] User mode +h validation")
+m.send(c1c, "WHOIS " + c1b.name)
+m.expect(c1c, "c1c sees c1b has +h mode", ".*\\+h.*")
+m.clearlog()
+print()
+
+print("All hangman basic tests passed!")

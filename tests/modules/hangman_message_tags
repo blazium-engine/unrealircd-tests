@@ -1,0 +1,80 @@
+#!/usr/bin/python3
+"""
+Hangman Module - Message tags tests
+Tests IRCv3 message tags for hangman lobby and game state
+"""
+
+import irctestframework.irctest
+
+m = irctestframework.irctest.IrcTest()
+# All clients must be on the same server for hangman to work
+c1a = m.new('c1a')
+c1b = m.new('c1b')
+c1c = m.new('c1c')
+m.connect()
+
+# Test 1: hangman-lobby tags present
+print("[TEST] hangman-lobby tags present")
+m.send(c1a, "HANGMAN CREATE 4 30")
+m.expect(c1a, "c1a gets lobby created with tags", "@.*hangman-lobby.*")
+m.clearlog()
+print()
+
+# Test 2: hangman-game tags present
+print("[TEST] hangman-game tags present")
+m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1c, "HANGMAN JOIN ABC12345")
+m.expect(c1c, "c1c joins lobby", ":.*2503.*")
+m.clearlog()
+
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a gets game start with tags", "@.*hangman-game.*")
+m.clearlog()
+print()
+
+# Test 3: Lobby ID in tags
+print("[TEST] Lobby ID in tags")
+m.send(c1a, "HANGMAN INFO")
+m.expect(c1a, "c1a gets lobby info with ID", "@.*hangman-lobby.*lobby_id=.*")
+m.clearlog()
+print()
+
+# Test 4: Round number in tags
+print("[TEST] Round number in tags")
+m.send(c1a, "HANGMANWORD TESTWORD")
+m.expect(c1a, "c1a gets word set with round", "@.*hangman-game.*round=.*")
+m.clearlog()
+print()
+
+# Test 5: Phase in tags
+print("[TEST] Phase in tags")
+m.send(c1a, "HANGMAN STATUS")
+m.expect(c1a, "c1a gets status with phase", "@.*hangman-game.*phase=.*")
+m.clearlog()
+print()
+
+# Test 6: Health in tags
+print("[TEST] Health in tags")
+m.send(c1a, "HANGMAN STATUS")
+m.expect(c1a, "c1a gets health with tags", "@.*hangman-game.*health=.*")
+m.clearlog()
+print()
+
+# Test 7: Dealer name in tags
+print("[TEST] Dealer name in tags")
+m.send(c1a, "HANGMAN STATUS")
+m.expect(c1a, "c1a gets dealer in tags", "@.*hangman-game.*dealer=.*")
+m.clearlog()
+print()
+
+# Test 8: Word length in tags (not actual word)
+print("[TEST] Word length in tags")
+m.send(c1a, "HANGMAN STATUS")
+m.expect(c1a, "c1a gets word length in tags", "@.*hangman-game.*word_length=.*")
+m.clearlog()
+print()
+
+print("All hangman message tags tests passed!")
