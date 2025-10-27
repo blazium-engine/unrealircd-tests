@@ -36,6 +36,10 @@ print()
 # Leave the current lobby before creating new one
 m.send(c1a, "HANGMAN LEAVE")
 m.clearlog()
+m.send(c1b, "HANGMAN LEAVE")
+m.clearlog()
+m.send(c1c, "HANGMAN LEAVE")
+m.clearlog()
 
 # Test 2: Max players (10)
 print("[TEST] Max players (10)")

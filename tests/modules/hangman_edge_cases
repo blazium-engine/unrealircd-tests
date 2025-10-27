@@ -87,16 +87,19 @@ m.clearlog()
 print()
 
 # Test 4: All vowels word
-# After c1a guesses correctly, dealer rotated to c1a
+# After c1a guesses correctly in Test 3, dealer rotates to c1a (wraps around)
+# Wait, this doesn't make sense. Let me trace: Test 1 c1a dealer, c1b guesses → c1b dealer
+# Test 2 c1b dealer, c1a guesses → c1c dealer
+# Test 3 c1c dealer, c1a guesses → should wrap to c1b, not c1a!
 print("[TEST] All vowels word")
-m.send(c1a, "HANGMANWORD AEOUI")
-m.expect(c1a, "c1a sets all vowels word", ":.*2512.*")
-m.expect(c1a, "c1a sees vowels display", ":.*2513.*")
+m.send(c1b, "HANGMANWORD AEOUI")
+m.expect(c1b, "c1b sets all vowels word", ":.*2512.*")
+m.expect(c1b, "c1b sees vowels display", ":.*2513.*")
 
 # End the round by having guesser correctly guess the word
-# c1a is dealer, so c1b or c1c can guess
-m.send(c1b, "HANGMANGUESS AEOUI")
-m.expect(c1b, "c1b guesses the word", ":.*2522.*")
+# c1b is dealer, so c1a or c1c can guess
+m.send(c1a, "HANGMANGUESS AEOUI")
+m.expect(c1a, "c1a guesses the word", ":.*2522.*")
 m.expect(c1a, "c1a sees round end", ":.*2517.*")
 m.expect(c1b, "c1b sees round end", ":.*2517.*")
 m.expect(c1c, "c1c sees round end", ":.*2517.*")
@@ -104,11 +107,18 @@ m.clearlog()
 print()
 
 # Test 5: No vowels word
-# After c1b guesses correctly, dealer rotated to c1b
+# After c1a guesses correctly in Test 4, dealer rotates to c1c
 print("[TEST] No vowels word")
-m.send(c1b, "HANGMANWORD BCD")
-m.expect(c1b, "c1b sets no vowels word", ":.*2512.*")
-m.expect(c1b, "c1b sees consonants display", ":.*2513.*")
+m.send(c1c, "HANGMANWORD BCD")
+m.expect(c1c, "c1c sets no vowels word", ":.*2512.*")
+m.expect(c1c, "c1c sees consonants display", ":.*2513.*")
+
+# End the round - c1c is dealer, so c1a or c1b can guess
+m.send(c1a, "HANGMANGUESS BCD")
+m.expect(c1a, "c1a guesses the word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
