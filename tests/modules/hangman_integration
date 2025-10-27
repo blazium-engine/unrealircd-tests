@@ -228,8 +228,15 @@ m.expect(c1e, "c1e gets spectator notice", "You joined as a spectator.*You can w
 m.clearlog()
 print()
 
+# Start a new game first
 # Test 8: Word with spaces complete game
 print("[TEST] Word with spaces complete game")
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.expect(c1b, "c1b starts game", ":.*2510.*")
+m.expect(c1c, "c1c starts game", ":.*2510.*")
+m.clearlog()
+
 m.send(c1a, "HANGMANWORD HELLO WORLD")
 m.expect(c1a, "c1a sets word with spaces", ":.*2512.*")
 m.clearlog()
@@ -240,8 +247,15 @@ m.expect(c1a, "c1a sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
+# Start another new game
 # Test 9: Maximum length word game
 print("[TEST] Maximum length word game")
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.expect(c1b, "c1b gets game start", ":.*2510.*")
+m.expect(c1c, "c1c gets game start", ":.*2510.*")
+m.clearlog()
+
 m.send(c1a, "HANGMANWORD ABCDEFGHIJKLMNOPQRST")
 m.expect(c1a, "c1a sets max length word", ":.*2512.*")
 m.clearlog()
