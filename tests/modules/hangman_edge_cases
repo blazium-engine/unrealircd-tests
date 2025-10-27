@@ -196,14 +196,19 @@ print()
 
 # Test 9: Insufficient players (< 2)
 print("[TEST] Insufficient players")
-# Try to start game with only 1 player
-m.send(c1a, "HANGMAN START")
-m.expect(c1a, "c1a gets insufficient players error", ":.*2545.*")
+# Try to start game with only 1 player (c1b is still in lobby)
+m.send(c1b, "HANGMAN START")
+m.expect(c1b, "c1b gets insufficient players error", ":.*2545.*")
 m.clearlog()
 print()
 
 # Test 10: Maximum players (10)
 print("[TEST] Maximum players")
+# Leave old lobby first
+m.send(c1b, "HANGMAN LEAVE")
+m.expect(c1b, "c1b leaves old lobby", ":.*2504.*")
+m.clearlog()
+
 # Create lobby with max players
 m.send(c1a, "HANGMAN CREATE 10 50")
 m.expect(c1a, "c1a creates max player lobby", ":.*2500.*")
