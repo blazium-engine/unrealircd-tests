@@ -101,19 +101,25 @@ m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
+# Game ended in Test 4 because someone reached the point limit
+# Start a new game for Test 5
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts new game", ":.*2510.*")
+m.clearlog()
+
 # Test 5: Min timeout (30s) via config
 print("[TEST] Min timeout (30s)")
 # This would test configuration limits
-# After c1a guesses correctly in Test 4, dealer rotates from c1b to c1c (order: c1a, c1b, c1c)
-m.send(c1c, "HANGMANWORD TIMEOUTTEST")
-m.expect(c1c, "c1c sets word", ":.*2512.*")
+# In the new game, c1a is dealer (first player)
+m.send(c1a, "HANGMANWORD TIMEOUTTEST")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
 # Would test 30s timeout behavior
 m.clearlog()
 print()
 
 # End the round so we can set another word
-m.send(c1a, "HANGMANGUESS TIMEOUTTEST")
-m.expect(c1a, "c1a guesses the word", ":.*2522.*")
+m.send(c1b, "HANGMANGUESS TIMEOUTTEST")
+m.expect(c1b, "c1b guesses the word", ":.*2522.*")
 m.expect(c1a, "c1a sees round end", ":.*2517.*")
 m.expect(c1b, "c1b sees round end", ":.*2517.*")
 m.expect(c1c, "c1c sees round end", ":.*2517.*")
