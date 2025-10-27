@@ -39,11 +39,12 @@ m.clearlog()
 # Spectator joins channel directly
 channel_name = f"#hangman-{invite_code}" if invite_code else "#hangman-ABC12345"
 m.send(c1d, f"JOIN {channel_name}")
+m.expect(c1d, "c1d joins as spectator", "JOIN.*#hangman-")
+m.expect(c1d, "c1d gets spectator notice on join", "You joined as a spectator.*watch.*cannot participate")
 m.clearlog()
 
-# Send something to the channel to trigger spectator registration
+# Send something to the channel to trigger spectator registration (already done on join)
 m.send(c1d, f"PRIVMSG {channel_name} :spectator message")
-m.expect(c1d, "c1d gets spectator notice", "You joined as a spectator")
 m.clearlog()
 print()
 

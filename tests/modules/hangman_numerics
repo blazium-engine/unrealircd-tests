@@ -144,10 +144,28 @@ m.expect(c1c, "c1c gets not in lobby error", ":.*2540.*")
 m.clearlog()
 print()
 
+# Leave the previous lobby before creating a new one
+m.send(c1a, "HANGMAN LEAVE")
+m.clearlog()
+m.send(c1b, "HANGMAN LEAVE")
+m.clearlog()
+
 # Test 16: Message tag presence validation
 print("[TEST] Message tag presence")
 m.send(c1a, "HANGMAN CREATE 3 20")
-m.expect(c1a, "c1a gets lobby created with tags", "@.*hangman-lobby.*")
+m.expect(c1a, "c1a gets lobby created", ":.*2500.*")
+invite_line3 = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_code3 = invite_line3.split()[-1] if invite_line3 else None
+m.clearlog()
+
+# The hangman-lobby tag appears on JOIN messages after the lobby is created
+if invite_code3:
+    m.send(c1b, f"HANGMAN JOIN {invite_code3}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
+join_line = m.expect(c1b, "c1b joins with tags", "JOIN.*#hangman-")
+if "@hangman-lobby=" not in join_line:
+    raise Exception("Expected hangman-lobby tag in JOIN message")
 m.clearlog()
 print()
 

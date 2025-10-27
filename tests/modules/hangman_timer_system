@@ -64,7 +64,7 @@ m.clearlog()
 print()
 
 # Note: After round ends, dealer rotates to c1b (the guesser who completed the word)
-# Tests 3-7 continue with c1b as dealer
+# So Tests 3 starts with c1b as dealer
 
 # Test 3: Timer warning at 60s
 print("[TEST] Timer warning at 60s")
@@ -76,52 +76,68 @@ m.clearlog()
 # Complete the word to end the round
 m.send(c1a, "HANGMANGUESS WARNING")
 m.expect(c1a, "c1a guesses word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
 # Test 4: Timer warning at 30s
+# After round 2, dealer rotates to c1c
 print("[TEST] Timer warning at 30s")
-m.send(c1a, "HANGMANWORD WARNINGFOUR")
-m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.send(c1c, "HANGMANWORD WARNINGFOUR")
+m.expect(c1c, "c1c sets word", ":.*2512.*")
 # Would test 30s warning (simplified for test)
 m.clearlog()
 
 # Complete the word to end the round
 m.send(c1b, "HANGMANGUESS WARNINGFOUR")
 m.expect(c1b, "c1b guesses word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
 # Test 5: Timer warning at 10s
+# After round 3, dealer rotates to c1a
 print("[TEST] Timer warning at 10s")
-m.send(c1b, "HANGMANWORD WARNINGFIVE")
-m.expect(c1b, "c1b sets word", ":.*2512.*")
+m.send(c1a, "HANGMANWORD WARNINGFIVE")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
 # Would test 10s warning (simplified for test)
 m.clearlog()
 
 # Complete the word to end the round
-m.send(c1a, "HANGMANGUESS WARNINGFIVE")
-m.expect(c1a, "c1a guesses word", ":.*2522.*")
+m.send(c1b, "HANGMANGUESS WARNINGFIVE")
+m.expect(c1b, "c1b guesses word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
 # Test 6: Word setting timeout triggers
+# After round 4, dealer rotates to c1b
 print("[TEST] Word setting timeout triggers")
-m.send(c1a, "HANGMANWORD TIMEOUTTRIGGER")
-m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.send(c1b, "HANGMANWORD TIMEOUTTRIGGER")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
 # Would test timeout trigger (simplified for test)
 m.clearlog()
 
 # Complete the word to end the round
-m.send(c1b, "HANGMANGUESS TIMEOUTTRIGGER")
-m.expect(c1b, "c1b guesses word", ":.*2522.*")
+m.send(c1a, "HANGMANGUESS TIMEOUTTRIGGER")
+m.expect(c1a, "c1a guesses word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
 # Test 7: Guessing timeout triggers
+# After round 5, dealer rotates to c1c
 print("[TEST] Guessing timeout triggers")
-m.send(c1b, "HANGMANWORD GUESSINGTIMEOUT")
-m.expect(c1b, "c1b sets word", ":.*2512.*")
+m.send(c1c, "HANGMANWORD GUESSINGTIMEOUT")
+m.expect(c1c, "c1c sets word", ":.*2512.*")
 # Would test guessing timeout (simplified for test)
 m.clearlog()
 print()
