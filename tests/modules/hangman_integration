@@ -156,6 +156,18 @@ m.expect(c1a, "c1a gets scores", ":.*2516.*")
 m.clearlog()
 print()
 
+# Leave the previous lobby
+m.send(c1a, "HANGMAN LEAVE")
+m.clearlog()
+m.send(c1b, "HANGMAN LEAVE")
+m.clearlog()
+m.send(c1c, "HANGMAN LEAVE")
+m.clearlog()
+m.send(c1d, "HANGMAN LEAVE")
+m.clearlog()
+m.send(c1e, "HANGMAN LEAVE")
+m.clearlog()
+
 # Test 4: Password-protected sealed lobby game
 print("[TEST] Password-protected sealed lobby game")
 m.send(c1a, "HANGMAN CREATE 3 30")
