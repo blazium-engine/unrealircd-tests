@@ -181,11 +181,7 @@ print()
 
 # Test 10: Max point limit (1000)
 print("[TEST] Max point limit (1000)")
-# Leave previous lobby first
-m.send(c1b, "HANGMAN LEAVE")
-m.expect(c1b, "c1b leaves", ":.*2504.*")
-m.send(c1c, "HANGMAN LEAVE")
-m.expect(c1c, "c1c leaves", ":.*2504.*")
+# Leave previous lobby first (only c1a is in the lobby from Test 9)
 m.send(c1a, "HANGMAN LEAVE")
 m.expect(c1a, "c1a leaves", ":.*2504.*")
 m.clearlog()
