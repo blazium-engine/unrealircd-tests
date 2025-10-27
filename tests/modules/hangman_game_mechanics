@@ -70,6 +70,11 @@ m.clearlog()
 print()
 
 # Test 3: Word reuse prevention
+# Wait for dealer rotation to c1c
+m.expect(c1c, "c1c sees round 3 started", ":.*Round 3 started.*Dealer: c1c.*")
+m.expect(c1c, "c1c is dealer", ":.*Word Setting.*")
+m.clearlog()
+
 # After rotation, c1c is now the dealer
 print("[TEST] Word reuse prevention")
 m.send(c1c, "HANGMANWORD HELLO WORLD")
