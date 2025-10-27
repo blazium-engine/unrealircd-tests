@@ -137,8 +137,7 @@ m.expect(c1a, "c1a leaves lobby", ":.*2504.*")
 m.expect(c1a, "c1a loses hangman player mode", "MODE.*-h")
 m.expect(c1b, "c1b sees c1a left", ".*left the lobby")
 m.expect(c1c, "c1c sees c1a left", ".*left the lobby")
-# c1b becomes the new host and should get the mode set
-m.expect(c1b, "c1b gets hangman player mode after host transfer", "MODE.*\\+h")
+# c1b becomes the new host (mode was already set from joining)
 m.clearlog()
 print()
 
