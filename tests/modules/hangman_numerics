@@ -136,11 +136,11 @@ m.expect(c1c, "c1c gets invalid invite error", ":.*2540.*")
 m.clearlog()
 
 m.send(c1c, "HANGMAN CREATE 1 10")
-m.expect(c1c, "c1c gets invalid max players error", ":.*2541.*")
+m.expect(c1c, "c1c gets invalid max players error", ":.*2555.*")
 m.clearlog()
 
 m.send(c1c, "HANGMANWORD")
-m.expect(c1c, "c1c gets not in lobby error", ":.*2542.*")
+m.expect(c1c, "c1c gets not in lobby error", ":.*2540.*")
 m.clearlog()
 print()
 

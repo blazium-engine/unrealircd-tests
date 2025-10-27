@@ -130,13 +130,21 @@ m.expect(c1e, "c1e joins new lobby", ":.*2503.*")
 m.clearlog()
 
 # Continue with 5 players
-m.send(c1d, "HANGMANWORD MONKEY")
-m.expect(c1d, "c1d sets word", ":.*2512.*")
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
 m.clearlog()
 
-m.send(c1a, "HANGMANGUESS MONKEY")
-m.expect(c1a, "c1a guesses word", ":.*2522.*")
+m.send(c1a, "HANGMANWORD MONKEY")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
+m.clearlog()
+
+m.send(c1b, "HANGMANGUESS MONKEY")
+m.expect(c1b, "c1b guesses word", ":.*2522.*")
 m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
+m.expect(c1d, "c1d sees round end", ":.*2517.*")
+m.expect(c1e, "c1e sees round end", ":.*2517.*")
 m.clearlog()
 print()
 

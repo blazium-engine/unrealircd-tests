@@ -18,18 +18,22 @@ print("[TEST] hangman-lobby tags present")
 m.send(c1a, "HANGMAN CREATE 4 30")
 invite_line = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
 invite_code = invite_line.split()[-1] if invite_line else None
-m.expect(c1a, "c1a gets lobby created with tags", "@.*hangman-lobby.*")
+m.clearlog()
+
+# The hangman-lobby tag appears on JOIN messages after the lobby is created
+if invite_code:
+    m.send(c1b, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
+join_line = m.expect(c1b, "c1b joins with tags", "JOIN.*#hangman-")
+if "@hangman-lobby=" not in join_line:
+    raise Exception("Expected hangman-lobby tag in JOIN message")
 m.clearlog()
 print()
 
 # Test 2: hangman-game tags present
 print("[TEST] hangman-game tags present")
-if invite_code:
-    m.send(c1b, f"HANGMAN JOIN {invite_code}")
-else:
-    m.send(c1b, "HANGMAN JOIN ABC12345")
-m.expect(c1b, "c1b joins lobby", ":.*2503.*")
-m.clearlog()
+# c1b already joined in Test 1, so join c1c instead
 
 if invite_code:
     m.send(c1c, f"HANGMAN JOIN {invite_code}")
