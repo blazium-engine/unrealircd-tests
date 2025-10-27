@@ -136,7 +136,13 @@ print()
 
 # Test 7: Min health (1) via config
 print("[TEST] Min health (1)")
-# This would test configuration limits
+# Start a new game first
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.expect(c1b, "c1b starts game", ":.*2510.*")
+m.expect(c1c, "c1c starts game", ":.*2510.*")
+m.clearlog()
+
 # c1a is the new dealer
 m.send(c1a, "HANGMANWORD MINHEALTH")
 m.expect(c1a, "c1a sets word", ":.*2512.*")

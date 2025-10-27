@@ -198,7 +198,7 @@ print()
 print("[TEST] Insufficient players")
 # Try to start game with only 1 player (c1b is still in lobby)
 m.send(c1b, "HANGMAN START")
-m.expect(c1b, "c1b gets insufficient players error", ":.*2545.*")
+m.expect(c1b, "c1b gets insufficient players error", ":.*2554.*")
 m.clearlog()
 print()
 

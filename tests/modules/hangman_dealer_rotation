@@ -90,11 +90,19 @@ m.expect(c1a, "c1a skips turn", "You skipped your turn")
 m.expect(c1b, "c1b sees skip", "Player.*skipped their turn")
 m.expect(c1c, "c1c sees skip", "Player.*skipped their turn")
 m.clearlog()
+
+# End the round by guessing the word (so we can start a new round for Test 6)
+m.send(c1b, "HANGMANGUESS SKIPTEST")
+m.expect(c1b, "c1b guesses the word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
+m.clearlog()
 print()
 
 # Test 6: Dealer disconnect during word setting
 print("[TEST] Dealer disconnect during word setting")
-# Start new round (c1a should be dealer after rotation)
+# After rotation, c1a should now be dealer
 m.send(c1a, "HANGMANWORD NEWWORD")
 m.expect(c1a, "c1a sets word", ":.*2512.*")
 m.clearlog()
