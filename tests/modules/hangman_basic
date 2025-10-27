@@ -164,7 +164,7 @@ print()
 
 # Test 15: User mode +h validation
 print("[TEST] User mode +h validation")
-m.send(c1c, "WHOIS " + c1b.name)
+m.send(c1c, "WHOIS " + c1b.nick)
 m.expect(c1c, "c1c sees c1b has +h mode", ".*\\+h.*")
 m.clearlog()
 print()
