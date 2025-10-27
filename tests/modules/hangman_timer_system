@@ -68,39 +68,39 @@ print()
 
 # Test 3: Timer warning at 60s
 print("[TEST] Timer warning at 60s")
-m.send(c1b, "HANGMANWORD WARNING60")
+m.send(c1b, "HANGMANWORD WARNING")
 m.expect(c1b, "c1b sets word", ":.*2512.*")
 # Would test 60s warning (simplified for test)
 m.clearlog()
 
 # Complete the word to end the round
-m.send(c1a, "HANGMANGUESS WARNING60")
+m.send(c1a, "HANGMANGUESS WARNING")
 m.expect(c1a, "c1a guesses word", ":.*2522.*")
 m.clearlog()
 print()
 
 # Test 4: Timer warning at 30s
 print("[TEST] Timer warning at 30s")
-m.send(c1a, "HANGMANWORD WARNING30")
+m.send(c1a, "HANGMANWORD WARNINGFOUR")
 m.expect(c1a, "c1a sets word", ":.*2512.*")
 # Would test 30s warning (simplified for test)
 m.clearlog()
 
 # Complete the word to end the round
-m.send(c1b, "HANGMANGUESS WARNING30")
+m.send(c1b, "HANGMANGUESS WARNINGFOUR")
 m.expect(c1b, "c1b guesses word", ":.*2522.*")
 m.clearlog()
 print()
 
 # Test 5: Timer warning at 10s
 print("[TEST] Timer warning at 10s")
-m.send(c1b, "HANGMANWORD WARNING10")
+m.send(c1b, "HANGMANWORD WARNINGFIVE")
 m.expect(c1b, "c1b sets word", ":.*2512.*")
 # Would test 10s warning (simplified for test)
 m.clearlog()
 
 # Complete the word to end the round
-m.send(c1a, "HANGMANGUESS WARNING10")
+m.send(c1a, "HANGMANGUESS WARNINGFIVE")
 m.expect(c1a, "c1a guesses word", ":.*2522.*")
 m.clearlog()
 print()
