@@ -165,6 +165,15 @@ print()
 
 # Test 9: Point limit 0 (unlimited)
 print("[TEST] Point limit 0 (unlimited)")
+# Leave previous lobby first
+m.send(c1a, "HANGMAN LEAVE")
+m.expect(c1a, "c1a leaves", ":.*2504.*")
+m.send(c1b, "HANGMAN LEAVE")
+m.expect(c1b, "c1b leaves", ":.*2504.*")
+m.send(c1c, "HANGMAN LEAVE")
+m.expect(c1c, "c1c leaves", ":.*2504.*")
+m.clearlog()
+
 m.send(c1a, "HANGMAN CREATE 3 0")
 m.expect(c1a, "c1a creates unlimited point lobby", ":.*2500.*")
 m.clearlog()
@@ -172,6 +181,15 @@ print()
 
 # Test 10: Max point limit (1000)
 print("[TEST] Max point limit (1000)")
+# Leave previous lobby first
+m.send(c1b, "HANGMAN LEAVE")
+m.expect(c1b, "c1b leaves", ":.*2504.*")
+m.send(c1c, "HANGMAN LEAVE")
+m.expect(c1c, "c1c leaves", ":.*2504.*")
+m.send(c1a, "HANGMAN LEAVE")
+m.expect(c1a, "c1a leaves", ":.*2504.*")
+m.clearlog()
+
 m.send(c1a, "HANGMAN CREATE 3 1000")
 m.expect(c1a, "c1a creates max point lobby", ":.*2500.*")
 m.clearlog()
