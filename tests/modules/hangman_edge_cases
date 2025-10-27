@@ -165,23 +165,32 @@ m.send(c1c, "HANGMAN LEAVE")
 m.expect(c1c, "c1c leaves during guessing", ":.*2504.*")
 m.expect(c1a, "c1a sees c1c left", ".*left the lobby")
 m.clearlog()
+
+# End the current round since game is still active
+m.send(c1b, "HANGMANGUESS TESTWORD")
+m.expect(c1b, "c1b guesses the word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.clearlog()
 print()
 
 # Test 8: Dealer disconnect handling
 print("[TEST] Dealer disconnect handling")
-# Create new game with c1b as dealer
-m.send(c1b, "HANGMAN START")
+# Start a new game
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
 m.expect(c1b, "c1b starts game", ":.*2510.*")
 m.clearlog()
 
-m.send(c1b, "HANGMANWORD DEALERTEST")
-m.expect(c1b, "c1b sets word", ":.*2512.*")
+# c1a is now the dealer
+m.send(c1a, "HANGMANWORD DEALERTEST")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
 m.clearlog()
 
 # Dealer disconnects
-m.send(c1b, "HANGMAN LEAVE")
-m.expect(c1b, "c1b leaves as dealer", ":.*2504.*")
-m.expect(c1a, "c1a sees dealer left", ".*left the lobby")
+m.send(c1a, "HANGMAN LEAVE")
+m.expect(c1a, "c1a leaves as dealer", ":.*2504.*")
+m.expect(c1b, "c1b sees dealer left", ".*left the lobby")
 m.clearlog()
 print()
 
