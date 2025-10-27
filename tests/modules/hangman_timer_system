@@ -141,10 +141,17 @@ m.clearlog()
 print()
 
 # Test 7: Guessing timeout triggers
-# After round 5, dealer rotates to c1c
+# Start a new game first
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.expect(c1b, "c1b starts game", ":.*2510.*")
+m.expect(c1c, "c1c starts game", ":.*2510.*")
+m.clearlog()
+
+# c1a is dealer in the new game
 print("[TEST] Guessing timeout triggers")
-m.send(c1c, "HANGMANWORD GUESSINGTIMEOUT")
-m.expect(c1c, "c1c sets word", ":.*2512.*")
+m.send(c1a, "HANGMANWORD GUESSINGTIMEOUT")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
 # Would test guessing timeout (simplified for test)
 m.clearlog()
 print()
