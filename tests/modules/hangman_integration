@@ -172,6 +172,8 @@ m.clearlog()
 print("[TEST] Password-protected sealed lobby game")
 m.send(c1a, "HANGMAN CREATE 3 30")
 m.expect(c1a, "c1a creates new lobby", ":.*2500.*")
+invite_line4 = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_code4 = invite_line4.split()[-1] if invite_line4 else None
 m.clearlog()
 
 m.send(c1a, "HANGMAN SETPASS secret123")
@@ -182,11 +184,17 @@ m.send(c1a, "HANGMAN LOCK")
 m.expect(c1a, "c1a locks lobby", ":.*2506.*")
 m.clearlog()
 
-m.send(c1b, "HANGMAN JOIN ABC12345 secret123")
+if invite_code4:
+    m.send(c1b, f"HANGMAN JOIN {invite_code4} secret123")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345 secret123")
 m.expect(c1b, "c1b joins with password", ":.*2503.*")
 m.clearlog()
 
-m.send(c1c, "HANGMAN JOIN ABC12345 secret123")
+if invite_code4:
+    m.send(c1c, f"HANGMAN JOIN {invite_code4} secret123")
+else:
+    m.send(c1c, "HANGMAN JOIN ABC12345 secret123")
 m.expect(c1c, "c1c joins with password", ":.*2503.*")
 m.clearlog()
 

@@ -193,9 +193,16 @@ m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
-# After rotation, c1a is now dealer
+# Start a new game first
 # Test 13: Timer warnings (60s, 30s, 10s)
 print("[TEST] Timer warnings")
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.expect(c1b, "c1b gets game start", ":.*2510.*")
+m.expect(c1c, "c1c gets game start", ":.*2510.*")
+m.clearlog()
+
+# After game start, c1a is dealer
 m.send(c1a, "HANGMANWORD WARNINGTEST")
 m.expect(c1a, "c1a sets word", ":.*2512.*")
 m.clearlog()
