@@ -79,6 +79,16 @@ m.expect(c1a, "c1a sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
+# Leave the current lobby before creating a new one
+m.send(c1a, "HANGMAN LEAVE")
+m.clearlog()
+m.send(c1b, "HANGMAN LEAVE")
+m.clearlog()
+m.send(c1c, "HANGMAN LEAVE")
+m.clearlog()
+m.send(c1d, "HANGMAN LEAVE")
+m.clearlog()
+
 # Test 2: 5 players, multiple rounds
 print("[TEST] 5 players, multiple rounds")
 # Create new lobby with 5 players

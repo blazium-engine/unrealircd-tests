@@ -96,15 +96,18 @@ print()
 # End the round so we can set another word (have guessers guess the word)
 m.send(c1a, "HANGMANGUESS ABCDEFGHIJKLMNOPQRST")
 m.expect(c1a, "c1a guesses the word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
 # Test 5: Min timeout (30s) via config
 print("[TEST] Min timeout (30s)")
 # This would test configuration limits
-# c1b is still the dealer (guessers won, so dealer doesn't rotate)
-m.send(c1b, "HANGMANWORD TIMEOUTTEST")
-m.expect(c1b, "c1b sets word", ":.*2512.*")
+# After c1a guesses correctly, dealer rotates to c1c (order: c1a, c1b, c1c)
+m.send(c1c, "HANGMANWORD TIMEOUTTEST")
+m.expect(c1c, "c1c sets word", ":.*2512.*")
 # Would test 30s timeout behavior
 m.clearlog()
 print()
@@ -112,6 +115,9 @@ print()
 # End the round so we can set another word
 m.send(c1a, "HANGMANGUESS TIMEOUTTEST")
 m.expect(c1a, "c1a guesses the word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 

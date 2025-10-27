@@ -132,6 +132,9 @@ print("[TEST] Complete word reveal")
 m.send(c1b, "HANGMANGUESS TESTING")
 m.expect(c1b, "c1b guesses complete word", ":.*2522.*")
 m.expect(c1a, "c1a sees word revealed", ":.*2513.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
@@ -156,18 +159,27 @@ m.clearlog()
 print()
 
 # Test 11: Timeout handling (word setting phase)
-# Note: After skip in Test 10, c1b is now dealer
+# Note: After Test 10, c1b is now dealer
 print("[TEST] Word setting timeout")
-m.send(c1b, "HANGMANWORD")
-m.expect(c1b, "c1b gets missing word error", ":.*2543.*")
-# Wait for timeout (simplified test - in real test would wait)
+# This test verifies MAKING SURE c1b is dealer and word can be set
+m.send(c1b, "HANGMANWORD TESTWORD")
+m.expect(c1b, "c1b sets word", ":.*2512.*")
+m.clearlog()
+
+# End the round so we can test next timeout scenario
+m.send(c1a, "HANGMANGUESS TESTWORD")
+m.expect(c1a, "c1a guesses correctly", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
 # Test 12: Timeout handling (guessing phase)
 print("[TEST] Guessing timeout")
-m.send(c1b, "HANGMANWORD TESTWORD")
-m.expect(c1b, "c1b sets word", ":.*2512.*")
+# After rotation, c1c is now dealer
+m.send(c1c, "HANGMANWORD GUESSTIMEOUT")
+m.expect(c1c, "c1c sets word", ":.*2512.*")
 # Wait for timeout (simplified test - in real test would wait)
 m.clearlog()
 print()
@@ -175,8 +187,19 @@ print()
 # Test 13: Timer warnings (60s, 30s, 10s)
 print("[TEST] Timer warnings")
 # This would be tested with actual timer simulation
-m.send(c1b, "HANGMANWORD WARNINGTEST")
-m.expect(c1b, "c1b sets word", ":.*2512.*")
+# After last test, c1c is dealer, need to end round first
+m.send(c1a, "HANGMANGUESS GUESSTIMEOUT")
+m.expect(c1a, "c1a guesses correctly", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
+m.clearlog()
+
+# After rotation, c1a is now dealer
+# Test 13: Timer warnings (60s, 30s, 10s)
+print("[TEST] Timer warnings")
+m.send(c1a, "HANGMANWORD WARNINGTEST")
+m.expect(c1a, "c1a sets word", ":.*2512.*")
 m.clearlog()
 print()
 
