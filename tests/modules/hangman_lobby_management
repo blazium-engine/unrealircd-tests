@@ -118,11 +118,21 @@ print("[TEST] Player count limits")
 # Create new lobby
 m.send(c1a, "HANGMAN CREATE 2 20")
 m.expect(c1a, "c1a creates lobby", ":.*2500.*")
+invite_line2 = m.expect(c1a, "c1a gets invite code", ":.*2505.*")
+invite_code2 = invite_line2.split()[-1] if invite_line2 else None
 m.clearlog()
 
-# Try to join with third player (should fail)
-if invite_code:
-    m.send(c1c, f"HANGMAN JOIN {invite_code}")
+# Join with second player first
+if invite_code2:
+    m.send(c1b, f"HANGMAN JOIN {invite_code2}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
+m.expect(c1b, "c1b joins", ":.*2503.*")
+m.clearlog()
+
+# Try to join with third player (should fail - lobby full)
+if invite_code2:
+    m.send(c1c, f"HANGMAN JOIN {invite_code2}")
 else:
     m.send(c1c, "HANGMAN JOIN ABC12345")
 m.expect(c1c, "c1c gets lobby full error", ":.*2549.*")
