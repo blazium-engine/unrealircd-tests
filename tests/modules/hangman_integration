@@ -300,6 +300,10 @@ print()
 
 # Test 12: Guesser timeout game
 print("[TEST] Guesser timeout game")
+m.send(c1b, "HANGMAN START")
+m.expect(c1b, "c1b starts game", ":.*2510.*")
+m.clearlog()
+
 m.send(c1b, "HANGMANWORD GUESSERTIMEOUT")
 m.expect(c1b, "c1b sets word", ":.*2512.*")
 # Would test guesser timeout
