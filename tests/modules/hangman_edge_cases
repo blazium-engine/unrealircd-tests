@@ -43,52 +43,68 @@ m.send(c1a, "HANGMANWORD ABC")
 m.expect(c1a, "c1a sets min length word", ":.*2512.*")
 m.expect(c1a, "c1a sees min length display", ":.*2513.*")
 
-# End the round by skipping to allow next word
-m.send(c1a, "HANGMAN SKIP")
+# End the round by having guesser correctly guess the word
+m.send(c1b, "HANGMANGUESS ABC")
+m.expect(c1b, "c1b guesses the word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
 # Test 2: Maximum length word (20 chars)
-# After first SKIP, dealer rotated to c1b
+# After c1b guesses correctly, dealer rotated to c1b
 print("[TEST] Maximum length word")
 m.send(c1b, "HANGMANWORD ABCDEFGHIJKLMNOPQRST")
 m.expect(c1b, "c1b sets max length word", ":.*2512.*")
 m.expect(c1b, "c1b sees max length display", ":.*2513.*")
 
-# End the round by skipping to allow next word
-# c1b is dealer, so c1b sends SKIP, dealer rotates to c1c
-m.send(c1b, "HANGMAN SKIP")
+# End the round by having guesser correctly guess the word
+# c1b is dealer, so c1a or c1c can guess
+m.send(c1a, "HANGMANGUESS ABCDEFGHIJKLMNOPQRST")
+m.expect(c1a, "c1a guesses the word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
 # Test 3: Word with multiple spaces
-# After second SKIP, dealer rotated to c1c
+# After c1a guesses correctly, dealer rotated to c1c
 print("[TEST] Word with multiple spaces")
 m.send(c1c, "HANGMANWORD HELLO  WORLD  TEST")
 m.expect(c1c, "c1c sets word with multiple spaces", ":.*2512.*")
 m.expect(c1c, "c1c sees spaces in display", ":.*2513.*")
 
-# End the round by skipping to allow next word
-# c1c is dealer, so c1c sends SKIP, dealer rotates to c1a
-m.send(c1c, "HANGMAN SKIP")
+# End the round by having guesser correctly guess the word
+# c1c is dealer, so c1a or c1b can guess
+m.send(c1a, "HANGMANGUESS HELLO  WORLD  TEST")
+m.expect(c1a, "c1a guesses the word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
 # Test 4: All vowels word
-# After third SKIP, dealer rotated to c1a
+# After c1a guesses correctly, dealer rotated to c1a
 print("[TEST] All vowels word")
 m.send(c1a, "HANGMANWORD AEOUI")
 m.expect(c1a, "c1a sets all vowels word", ":.*2512.*")
 m.expect(c1a, "c1a sees vowels display", ":.*2513.*")
 
-# End the round by skipping to allow next word
-# c1a is dealer, so c1a sends SKIP, dealer rotates to c1b
-m.send(c1a, "HANGMAN SKIP")
+# End the round by having guesser correctly guess the word
+# c1a is dealer, so c1b or c1c can guess
+m.send(c1b, "HANGMANGUESS AEOUI")
+m.expect(c1b, "c1b guesses the word", ":.*2522.*")
+m.expect(c1a, "c1a sees round end", ":.*2517.*")
+m.expect(c1b, "c1b sees round end", ":.*2517.*")
+m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
 # Test 5: No vowels word
-# After fourth SKIP, dealer rotated to c1b
+# After c1b guesses correctly, dealer rotated to c1b
 print("[TEST] No vowels word")
 m.send(c1b, "HANGMANWORD BCD")
 m.expect(c1b, "c1b sets no vowels word", ":.*2512.*")
