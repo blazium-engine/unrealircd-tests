@@ -77,7 +77,10 @@ print()
 
 # Test 9: RPL_HANGMANGAMESTART (2510)
 print("[TEST] RPL_HANGMANGAMESTART (2510)")
-m.send(c1b, "HANGMAN JOIN ABC12345")
+if invite_code:
+    m.send(c1b, f"HANGMAN JOIN {invite_code}")
+else:
+    m.send(c1b, "HANGMAN JOIN ABC12345")
 m.expect(c1b, "c1b joins lobby", ":.*2503.*")
 m.clearlog()
 
