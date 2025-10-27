@@ -78,19 +78,17 @@ m.expect(c1a, "c1a guesses the word", ":.*2522.*")
 m.clearlog()
 print()
 
-# Test 5: Dealer skip loses round
-print("[TEST] Dealer skip loses round")
+# Test 5: Guesser skip
+print("[TEST] Guesser skip loses round")
 # c1c should be dealer now (after rotation)
 m.send(c1c, "HANGMANWORD SKIPTEST")
 m.expect(c1c, "c1c sets word as dealer", ":.*2512.*")
 m.clearlog()
-# Dealer skips their turn
-m.send(c1c, "HANGMAN SKIP")
-m.expect(c1c, "c1c skips turn", "Dealer skipped their turn")
-m.expect(c1a, "c1a sees round end", ":.*2517.*")
-m.expect(c1b, "c1b sees round end", ":.*2517.*")
-m.expect(c1c, "c1c sees round end", ":.*2517.*")
-# Dealer should lose the round
+# Guesser skips their turn (dealer cannot skip)
+m.send(c1a, "HANGMAN SKIP")
+m.expect(c1a, "c1a skips turn", "You skipped your turn")
+m.expect(c1b, "c1b sees skip", "Player.*skipped their turn")
+m.expect(c1c, "c1c sees skip", "Player.*skipped their turn")
 m.clearlog()
 print()
 

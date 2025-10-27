@@ -213,17 +213,18 @@ print()
 
 # Test 6: Spectators watching game
 print("[TEST] Spectators watching game")
-m.send(c1d, "JOIN #hangman-ABC12345")
+channel_name_spectator = f"#hangman-{invite_code4}" if invite_code4 else "#hangman-ABC12345"
+m.send(c1d, f"JOIN {channel_name_spectator}")
 m.expect(c1d, "c1d joins as spectator", "JOIN.*#hangman-")
-m.expect(c1d, "c1d gets spectator notice", "You joined as a spectator")
+m.expect(c1d, "c1d gets spectator notice", "You joined as a spectator.*You can watch")
 m.clearlog()
 print()
 
 # Test 7: Player joins mid-game as spectator
 print("[TEST] Player joins mid-game as spectator")
-m.send(c1e, "JOIN #hangman-ABC12345")
+m.send(c1e, f"JOIN {channel_name_spectator}")
 m.expect(c1e, "c1e joins as spectator", "JOIN.*#hangman-")
-m.expect(c1e, "c1e gets spectator notice", "You joined as a spectator")
+m.expect(c1e, "c1e gets spectator notice", "You joined as a spectator.*You can watch")
 m.clearlog()
 print()
 

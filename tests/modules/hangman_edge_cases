@@ -86,17 +86,24 @@ m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
 print()
 
+# Start a new game first
 # Test 4: All vowels word
-# After Test 3, dealer rotates from c1c to c1b (wrap around: order is c1a, c1b, c1c)
 print("[TEST] All vowels word")
-m.send(c1b, "HANGMANWORD AEOUI")
-m.expect(c1b, "c1b sets all vowels word", ":.*2512.*")
-m.expect(c1b, "c1b sees vowels display", ":.*2513.*")
+m.send(c1a, "HANGMAN START")
+m.expect(c1a, "c1a starts game", ":.*2510.*")
+m.expect(c1b, "c1b starts game", ":.*2510.*")
+m.expect(c1c, "c1c starts game", ":.*2510.*")
+m.clearlog()
+
+# c1a is dealer in the new game
+m.send(c1a, "HANGMANWORD AEOUI")
+m.expect(c1a, "c1a sets all vowels word", ":.*2512.*")
+m.expect(c1a, "c1a sees vowels display", ":.*2513.*")
 
 # End the round by having guesser correctly guess the word
-# c1b is dealer, so c1a or c1c can guess
-m.send(c1a, "HANGMANGUESS AEOUI")
-m.expect(c1a, "c1a guesses the word", ":.*2522.*")
+# c1a is dealer, so c1b or c1c can guess
+m.send(c1b, "HANGMANGUESS AEOUI")
+m.expect(c1b, "c1b guesses the word", ":.*2522.*")
 m.expect(c1a, "c1a sees round end", ":.*2517.*")
 m.expect(c1b, "c1b sees round end", ":.*2517.*")
 m.expect(c1c, "c1c sees round end", ":.*2517.*")
