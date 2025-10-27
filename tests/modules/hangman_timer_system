@@ -131,12 +131,15 @@ m.expect(c1a, "c1a sets word", ":.*2512.*")
 # Would test timeout trigger (simplified for test)
 m.clearlog()
 
-# Complete the word to end the round
+# Complete the word to end the round - this will end the game due to point limit
 m.send(c1b, "HANGMANGUESS TIMEOUTTRIGGER")
 m.expect(c1b, "c1b guesses word", ":.*2522.*")
-m.expect(c1a, "c1a sees round end", ":.*2517.*")
-m.expect(c1b, "c1b sees round end", ":.*2517.*")
-m.expect(c1c, "c1c sees round end", ":.*2517.*")
+
+# The game will end here because c1b reached the point limit
+# Wait a bit for the game end messages
+m.expect(c1a, "c1a sees game end notice", ".*Game ended.*")
+m.expect(c1b, "c1b sees game end notice", ".*Game ended.*")
+m.expect(c1c, "c1c sees game end notice", ".*Game ended.*")
 m.clearlog()
 print()
 

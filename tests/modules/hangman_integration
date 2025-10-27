@@ -239,6 +239,7 @@ m.clearlog()
 
 m.send(c1a, "HANGMANWORD HELLO WORLD")
 m.expect(c1a, "c1a sets word with spaces", ":.*2512.*")
+m.expect(c1a, "c1a sees display", ":.*2513.*")
 m.clearlog()
 
 m.send(c1b, "HANGMANGUESS HELLO WORLD")
