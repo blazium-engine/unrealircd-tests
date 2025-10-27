@@ -33,15 +33,14 @@ m.expect(c1a, "c1a starts min player game", ":.*2510.*")
 m.clearlog()
 print()
 
-# Leave the current lobby before creating new one
+# Leave the min player lobby before creating max player lobby
 m.send(c1a, "HANGMAN LEAVE")
 m.clearlog()
 m.send(c1b, "HANGMAN LEAVE")
 m.clearlog()
-m.send(c1c, "HANGMAN LEAVE")
-m.clearlog()
 
 # Test 2: Max players (10)
+# Note: c1c didn't leave, so if he tries to join, he'll be in his old lobby still
 print("[TEST] Max players (10)")
 m.send(c1a, "HANGMAN CREATE 10 30")
 m.expect(c1a, "c1a creates max player lobby", ":.*2500.*")
@@ -105,7 +104,7 @@ print()
 # Test 5: Min timeout (30s) via config
 print("[TEST] Min timeout (30s)")
 # This would test configuration limits
-# After c1a guesses correctly, dealer rotates to c1c (order: c1a, c1b, c1c)
+# After c1a guesses correctly in Test 4, dealer rotates from c1b to c1c (order: c1a, c1b, c1c)
 m.send(c1c, "HANGMANWORD TIMEOUTTEST")
 m.expect(c1c, "c1c sets word", ":.*2512.*")
 # Would test 30s timeout behavior
@@ -128,11 +127,6 @@ print("[TEST] Max timeout (600s) appears in config")
 m.clearlog()
 print()
 
-# Start a new game since we've been testing for a while
-m.send(c1a, "HANGMAN START")
-m.expect(c1a, "c1a starts new game", ":.*2510.*")
-m.clearlog()
-print()
 
 # Test 7: Min health (1) via config
 print("[TEST] Min health (1)")

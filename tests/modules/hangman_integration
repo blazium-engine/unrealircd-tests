@@ -98,12 +98,8 @@ invite_line2 = m.expect(c1a, "c1a gets new invite code", ":.*2505.*")
 invite_code2 = invite_line2.split()[-1] if invite_line2 else None
 m.clearlog()
 
-if invite_code2:
-    m.send(c1a, f"HANGMAN JOIN {invite_code2}")
-else:
-    m.send(c1a, "HANGMAN JOIN ABC12345")
-m.expect(c1a, "c1a joins new lobby", ":.*2503.*")
-m.clearlog()
+# c1a already created the lobby, so they're automatically in it
+# Now join other players
 
 if invite_code2:
     m.send(c1b, f"HANGMAN JOIN {invite_code2}")

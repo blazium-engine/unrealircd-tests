@@ -184,9 +184,6 @@ m.expect(c1c, "c1c sets word", ":.*2512.*")
 m.clearlog()
 print()
 
-# Test 13: Timer warnings (60s, 30s, 10s)
-print("[TEST] Timer warnings")
-# This would be tested with actual timer simulation
 # After last test, c1c is dealer, need to end round first
 m.send(c1a, "HANGMANGUESS GUESSTIMEOUT")
 m.expect(c1a, "c1a guesses correctly", ":.*2522.*")
@@ -194,6 +191,7 @@ m.expect(c1a, "c1a sees round end", ":.*2517.*")
 m.expect(c1b, "c1b sees round end", ":.*2517.*")
 m.expect(c1c, "c1c sees round end", ":.*2517.*")
 m.clearlog()
+print()
 
 # After rotation, c1a is now dealer
 # Test 13: Timer warnings (60s, 30s, 10s)

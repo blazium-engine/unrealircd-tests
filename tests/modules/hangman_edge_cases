@@ -53,7 +53,7 @@ m.clearlog()
 print()
 
 # Test 2: Maximum length word (20 chars)
-# After c1b guesses correctly, dealer rotated to c1b
+# After Test 1, c1b is the dealer
 print("[TEST] Maximum length word")
 m.send(c1b, "HANGMANWORD ABCDEFGHIJKLMNOPQRST")
 m.expect(c1b, "c1b sets max length word", ":.*2512.*")
@@ -87,10 +87,7 @@ m.clearlog()
 print()
 
 # Test 4: All vowels word
-# After c1a guesses correctly in Test 3, dealer rotates to c1a (wraps around)
-# Wait, this doesn't make sense. Let me trace: Test 1 c1a dealer, c1b guesses → c1b dealer
-# Test 2 c1b dealer, c1a guesses → c1c dealer
-# Test 3 c1c dealer, c1a guesses → should wrap to c1b, not c1a!
+# After Test 3, dealer rotates from c1c to c1b (wrap around: order is c1a, c1b, c1c)
 print("[TEST] All vowels word")
 m.send(c1b, "HANGMANWORD AEOUI")
 m.expect(c1b, "c1b sets all vowels word", ":.*2512.*")
