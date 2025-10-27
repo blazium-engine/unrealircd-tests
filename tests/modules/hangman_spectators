@@ -43,7 +43,7 @@ m.expect(c1d, "c1d joins as spectator", "JOIN.*#hangman-")
 m.expect(c1d, "c1d gets spectator notice", "You joined as a spectator.*You can watch")
 m.clearlog()
 
-# Send something to the channel (spectator is already registered on JOIN)
+# Send something to the channel to trigger spectator registration with HangmanPlayerData
 m.send(c1d, f"PRIVMSG {channel_name} :spectator message")
 m.clearlog()
 print()
