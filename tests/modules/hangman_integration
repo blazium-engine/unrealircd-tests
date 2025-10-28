@@ -93,6 +93,11 @@ m.send(c1d, "HANGMAN LEAVE")
 m.expect(c1d, "c1d leaves lobby", ":.*2504.*")
 m.clearlog()
 
+# Ensure c1e leaves too
+m.send(c1e, "HANGMAN LEAVE")
+m.expect(c1e, "c1e leaves lobby", ":.*2504.*")
+m.clearlog()
+
 # Test 2: 5 players, multiple rounds
 print("[TEST] 5 players, multiple rounds")
 # Create new lobby with 5 players
