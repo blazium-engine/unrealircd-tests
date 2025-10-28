@@ -78,9 +78,10 @@ m.send(c2a, "HANGMANGUESS E")
 m.expect(c2a, "c2a makes guess", ":.*2520.*")
 m.expect(c1a, "c1a sees c2a guess", ".*guessed 'E' correctly")
 m.expect(c3a, "c3a sees c2a guess", ".*guessed 'E' correctly")
-m.expect(c1a, "c1a sees display update", ":.*2513.*")
-m.expect(c2a, "c2a sees display update", ":.*2513.*")
-m.expect(c3a, "c3a sees display update", ":.*2513.*")
+# Display updates are sent via NOTICE when guesses are processed on shadow lobbies
+m.expect(c1a, "c1a sees display update", "Current word")
+m.expect(c2a, "c2a sees display update", ":.*2513.*")  # c2a gets numeric since it made the guess
+m.expect(c3a, "c3a sees display update", "Current word")
 m.clearlog()
 print()
 
