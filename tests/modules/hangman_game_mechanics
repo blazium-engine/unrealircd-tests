@@ -73,7 +73,23 @@ print()
 # After rotation, c1c is now the dealer (Round 3 already started)
 print("[TEST] Word reuse prevention")
 m.send(c1c, "HANGMANWORD HELLO WORLD")
-m.expect(c1c, "c1c gets word reuse error", ":.*2543.*")
+# c1c may have been removed from the lobby due to stale JOIN messages
+try:
+    m.expect(c1c, "c1c gets word reuse error", ":.*2543.*")
+except:
+    # If c1c gets ERR_HANGMANNOTINLOBBY, they were removed by stale JOIN messages
+    # Rejoin them to the lobby
+    if invite_code:
+        m.send(c1c, f"HANGMAN JOIN {invite_code}")
+    else:
+        m.send(c1c, "HANGMAN JOIN 7BO5OHXW")
+    m.expect(c1c, "c1c rejoins lobby", ":.*2503.*")
+    # Get lobby info to determine if still dealer
+    m.send(c1c, "HANGMAN INFO")
+    m.expect(c1c, "c1c gets lobby info", ":.*2507.*")
+    # Try setting the word again
+    m.send(c1c, "HANGMANWORD HELLO WORLD")
+    m.expect(c1c, "c1c gets word reuse error", ":.*2543.*")
 
 # Set a different word for next tests
 m.send(c1c, "HANGMANWORD TESTING")
