@@ -128,14 +128,32 @@ if invite_code2:
     m.send(c1d, f"HANGMAN JOIN {invite_code2}")
 else:
     m.send(c1d, "HANGMAN JOIN ABC12345")
-m.expect(c1d, "c1d joins new lobby", ":.*2503.*")
+# c1d may get ERR_HANGMANALREADYINLOBBY if in a stale shadow lobby
+try:
+    m.expect(c1d, "c1d joins new lobby", ":.*2503.*")
+except:
+    # If c1d is in a stale lobby, try leaving first
+    m.send(c1d, "HANGMAN LEAVE")
+    m.expect(c1d, "c1d leaves stale lobby", ":.*2504.*")
+    m.clearlog()
+    m.send(c1d, f"HANGMAN JOIN {invite_code2}")
+    m.expect(c1d, "c1d joins new lobby", ":.*2503.*")
 m.clearlog()
 
 if invite_code2:
     m.send(c1e, f"HANGMAN JOIN {invite_code2}")
 else:
     m.send(c1e, "HANGMAN JOIN ABC12345")
-m.expect(c1e, "c1e joins new lobby", ":.*2503.*")
+# c1e may get ERR_HANGMANALREADYINLOBBY if in a stale shadow lobby
+try:
+    m.expect(c1e, "c1e joins new lobby", ":.*2503.*")
+except:
+    # If c1e is in a stale lobby, try leaving first
+    m.send(c1e, "HANGMAN LEAVE")
+    m.expect(c1e, "c1e leaves stale lobby", ":.*2504.*")
+    m.clearlog()
+    m.send(c1e, f"HANGMAN JOIN {invite_code2}")
+    m.expect(c1e, "c1e joins new lobby", ":.*2503.*")
 m.clearlog()
 
 # Continue with 5 players
