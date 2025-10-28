@@ -51,8 +51,9 @@ print()
 print("[TEST] Cross-server dealer and guessers")
 m.send(c1a, "HANGMAN START")
 m.expect(c1a, "c1a starts game", ":.*2510.*")
-m.expect(c2a, "c2a gets game start", ":.*2510.*")
-m.expect(c3a, "c3a gets game start", ":.*2510.*")
+# c2a and c3a are on remote servers (shadow lobbies) - they only get NOTICE, not 2510
+m.expect(c2a, "c2a sees game started", ":.*Game started.*")
+m.expect(c3a, "c3a sees game started", ":.*Game started.*")
 m.clearlog()
 print()
 

@@ -108,8 +108,10 @@ m.expect(c1a, "c1a loses hangman player mode", "MODE.*-h")
 
 # Also leave c1b and c1c to fully destroy the lobby
 m.send(c1b, "HANGMAN LEAVE")
+m.expect(c1b, "c1b leaves lobby", ":.*2504.*")
 m.clearlog()
 m.send(c1c, "HANGMAN LEAVE")
+m.expect(c1c, "c1c leaves lobby", ":.*2504.*")
 m.clearlog()
 print()
 
