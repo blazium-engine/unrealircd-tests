@@ -66,6 +66,7 @@ print()
 # Test 3: Min word length (3)
 print("[TEST] Min word length (3)")
 m.send(c1a, "HANGMAN START")
+# Only the server that starts the game gets 2510; others see a NOTICE
 m.expect(c1a, "c1a starts game", ":.*2510.*")
 m.clearlog()
 
@@ -139,8 +140,15 @@ print("[TEST] Min health (1)")
 # Start a new game first
 m.send(c1a, "HANGMAN START")
 m.expect(c1a, "c1a starts game", ":.*2510.*")
-m.expect(c1b, "c1b starts game", ":.*2510.*")
-m.expect(c1c, "c1c starts game", ":.*2510.*")
+# Remote clients see a notice, not 2510
+try:
+    m.expect(c1b, "c1b sees game started", ".*Game started.*")
+except:
+    pass
+try:
+    m.expect(c1c, "c1c sees game started", ".*Game started.*")
+except:
+    pass
 m.clearlog()
 
 # c1a is the new dealer

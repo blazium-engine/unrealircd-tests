@@ -116,9 +116,19 @@ print()
 print("[TEST] Round end synchronization")
 m.send(c2a, "HANGMANGUESS ELEPHANT")
 m.expect(c2a, "c2a guesses word", ":.*2522.*")
-m.expect(c1a, "c1a sees round end", ":.*2517.*")
-m.expect(c2a, "c2a sees round end", ":.*2517.*")
-m.expect(c3a, "c3a sees round end", ":.*2517.*")
+# Primary server may emit 2517; shadow lobbies may only get NOTICES
+try:
+    m.expect(c1a, "c1a sees round end", ":.*2517.*", timeout=1)
+except:
+    m.expect(c1a, "c1a sees round end via notice", ".*Round .* ended!.*")
+try:
+    m.expect(c2a, "c2a sees round end", ":.*2517.*", timeout=1)
+except:
+    m.expect(c2a, "c2a sees round end via notice", ".*Round .* ended!.*")
+try:
+    m.expect(c3a, "c3a sees round end", ":.*2517.*", timeout=1)
+except:
+    m.expect(c3a, "c3a sees round end via notice", ".*Round .* ended!.*")
 m.clearlog()
 print()
 
