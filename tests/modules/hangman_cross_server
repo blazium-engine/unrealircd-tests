@@ -72,22 +72,22 @@ print()
 
 # Test 6: Guess synchronization across servers
 print("[TEST] Guess synchronization")
-# Note: Remote players (c2a on server 2) making guesses are processed on the primary server
-# The result is broadcast back and the client gets the numeric
+# Shadow lobbies now have the secret word and can process guesses
 m.send(c2a, "HANGMANGUESS E")
-# c2a should get either 2520 (correct) or 2521 (incorrect) depending on the word
-m.expect(c2a, "c2a makes guess", ":.*25[012].*")
-# The guess result is broadcast from the primary server
-m.expect(c1a, "c1a sees c2a guess", ".*guessed 'E' .*")
-m.expect(c3a, "c3a sees c2a guess", ".*guessed 'E' .*")
-# Note: Display updates are sent when guesses are processed locally on shadow lobbies
-# but the game state may not be fully synchronized since shadow lobbies don't have the secret word
+# c2a should get 2520 (correct) since E is in ELEPHANT
+m.expect(c2a, "c2a makes guess", ":.*2520.*")
+m.expect(c1a, "c1a sees c2a guess", ".*guessed 'E' correctly")
+m.expect(c3a, "c3a sees c2a guess", ".*guessed 'E' correctly")
+m.expect(c1a, "c1a sees display update", ":.*2513.*")
+m.expect(c2a, "c2a sees display update", ":.*2513.*")
+m.expect(c3a, "c3a sees display update", ":.*2513.*")
 m.clearlog()
 print()
 
 # Test 7: Health updates broadcast
 print("[TEST] Health updates broadcast")
 m.send(c3a, "HANGMANGUESS Z")
+# Z is not in ELEPHANT, should get 2521 (incorrect)
 m.expect(c3a, "c3a makes wrong guess", ":.*2521.*")
 m.expect(c1a, "c1a sees health update", ":.*2514.*")
 m.expect(c2a, "c2a sees health update", ":.*2514.*")
