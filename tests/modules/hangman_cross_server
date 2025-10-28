@@ -72,10 +72,12 @@ print()
 
 # Test 6: Guess synchronization across servers
 print("[TEST] Guess synchronization")
+# Note: Remote players (c2a on server 2) making guesses get numerics via the GUESS broadcast handler
 m.send(c2a, "HANGMANGUESS E")
 m.expect(c2a, "c2a makes guess", ":.*2520.*")
 m.expect(c1a, "c1a sees c2a guess", ".*guessed 'E' correctly")
 m.expect(c3a, "c3a sees c2a guess", ".*guessed 'E' correctly")
+# Display updates via broadcasts
 m.expect(c1a, "c1a sees display update", ":.*2513.*")
 m.expect(c2a, "c2a sees display update", ":.*2513.*")
 m.expect(c3a, "c3a sees display update", ":.*2513.*")
