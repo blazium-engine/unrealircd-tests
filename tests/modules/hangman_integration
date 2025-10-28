@@ -81,12 +81,16 @@ print()
 
 # Leave the current lobby before creating a new one
 m.send(c1a, "HANGMAN LEAVE")
+m.expect(c1a, "c1a leaves lobby", ":.*2504.*")
 m.clearlog()
 m.send(c1b, "HANGMAN LEAVE")
+m.expect(c1b, "c1b leaves lobby", ":.*2504.*")
 m.clearlog()
 m.send(c1c, "HANGMAN LEAVE")
+m.expect(c1c, "c1c leaves lobby", ":.*2504.*")
 m.clearlog()
 m.send(c1d, "HANGMAN LEAVE")
+m.expect(c1d, "c1d leaves lobby", ":.*2504.*")
 m.clearlog()
 
 # Test 2: 5 players, multiple rounds
@@ -158,14 +162,19 @@ print()
 
 # Leave the previous lobby
 m.send(c1a, "HANGMAN LEAVE")
+m.expect(c1a, "c1a leaves lobby", ":.*2504.*")
 m.clearlog()
 m.send(c1b, "HANGMAN LEAVE")
+m.expect(c1b, "c1b leaves lobby", ":.*2504.*")
 m.clearlog()
 m.send(c1c, "HANGMAN LEAVE")
+m.expect(c1c, "c1c leaves lobby", ":.*2504.*")
 m.clearlog()
 m.send(c1d, "HANGMAN LEAVE")
+m.expect(c1d, "c1d leaves lobby", ":.*2504.*")
 m.clearlog()
 m.send(c1e, "HANGMAN LEAVE")
+m.expect(c1e, "c1e leaves lobby", ":.*2504.*")
 m.clearlog()
 
 # Test 4: Password-protected sealed lobby game
