@@ -77,8 +77,9 @@ print("[TEST] Guess synchronization")
 m.send(c2a, "HANGMANGUESS E")
 # c2a should get either 2520 (correct) or 2521 (incorrect) depending on the word
 m.expect(c2a, "c2a makes guess", ":.*25[012].*")
-m.expect(c1a, "c1a sees c2a guess", ".*guessed 'E' correctly")
-m.expect(c3a, "c3a sees c2a guess", ".*guessed 'E' correctly")
+# The guess result is broadcast from the primary server
+m.expect(c1a, "c1a sees c2a guess", ".*guessed 'E' .*")
+m.expect(c3a, "c3a sees c2a guess", ".*guessed 'E' .*")
 # Display updates via broadcasts
 m.expect(c1a, "c1a sees display update", ":.*2513.*")
 m.expect(c2a, "c2a sees display update", ":.*2513.*")
